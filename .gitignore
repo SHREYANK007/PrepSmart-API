@@ -1,0 +1,48 @@
+# Environment files (IMPORTANT: Never commit API keys!)
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+temp/
+tmp/
+
+# Models cache
+models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Database
+*.db
+*.sqlite
+
+# Secrets
+secrets/
+*.pem
+*.key
