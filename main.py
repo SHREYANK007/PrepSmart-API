@@ -1,11 +1,18 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List, Optional
 import os
+import json
+import re
 from dotenv import load_dotenv
+import openai
+from datetime import datetime
 
 load_dotenv()
+
+# Initialize OpenAI
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 app = FastAPI(
     title="PrepSmart Scoring API",
@@ -21,18 +28,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class DetailedFeedback(BaseModel):
+    score: int
+    justification: str
+    errors: List[str]
+    suggestions: List[str]
+
 class SummarizeTextResponse(BaseModel):
     success: bool
     scores: Dict[str, int]
-    feedback: Dict[str, str]
+    detailed_feedback: Dict[str, DetailedFeedback]
     overall_feedback: str
     total_score: int
     percentage: int
     band: str
-    improvements: list
-    strengths: list
-    ai_recommendations: list
-    ai_suggestions: Dict[str, str]
+    key_points_covered: List[str]
+    key_points_missed: List[str]
+    grammar_errors: List[str]
+    vocabulary_assessment: str
+    improvements: List[str]
+    strengths: List[str]
+    ai_recommendations: List[str]
+    word_count: int
+    is_single_sentence: bool
 
 @app.get("/")
 async def root():
@@ -46,108 +64,249 @@ async def health_check():
 async def test():
     return {"message": "API test successful", "timestamp": "2025-01-15"}
 
+async def analyze_with_gpt4(
+    reading_passage: str,
+    key_points: str,
+    sample_summary: str,
+    user_summary: str,
+    question_title: str
+) -> Dict:
+    """
+    Use GPT-4 to analyze and score the user's summary according to PTE criteria
+    """
+    
+    prompt = f"""You are an official PTE Academic examiner with 10+ years of experience. Score this Summarize Written Text response STRICTLY according to Pearson's official PTE marking criteria.
+
+QUESTION: {question_title}
+
+READING PASSAGE:
+{reading_passage}
+
+KEY POINTS TO COVER:
+{key_points}
+
+SAMPLE CORRECT ANSWER:
+{sample_summary}
+
+USER'S SUMMARY TO EVALUATE:
+{user_summary}
+
+OFFICIAL PTE MARKING CRITERIA:
+
+1. CONTENT (0-2 points):
+   - 2 points: All key points covered, main idea clearly present
+   - 1 point: Most key points covered, main idea somewhat present  
+   - 0 points: Key points missed, main idea unclear/missing
+
+2. FORM (0-1 point):
+   - 1 point: Single sentence, 5-75 words, starts with capital, ends with period
+   - 0 points: Multiple sentences OR wrong word count OR incorrect punctuation
+
+3. GRAMMAR (0-2 points):
+   - 2 points: No grammatical errors, perfect sentence structure
+   - 1 point: 1-2 minor errors that don't affect understanding
+   - 0 points: Major grammatical errors affecting comprehension
+
+4. VOCABULARY (0-2 points):
+   - 2 points: Appropriate academic vocabulary, excellent word choice
+   - 1 point: Adequate vocabulary with some basic words
+   - 0 points: Very limited, repetitive, or inappropriate vocabulary
+
+ANALYSIS REQUIRED:
+1. Check if it's a single sentence
+2. Count exact words (5-75 range)
+3. Identify ALL grammar/spelling errors with exact locations
+4. List which key points are covered vs missed
+5. Assess vocabulary level and word choices
+6. Provide specific improvement suggestions
+
+Return ONLY valid JSON in this exact format:
+{{
+    "content_score": 0-2,
+    "content_justification": "detailed explanation",
+    "content_errors": ["specific issues found"],
+    "content_suggestions": ["specific improvements"],
+    
+    "form_score": 0-1,
+    "form_justification": "detailed explanation", 
+    "form_errors": ["specific issues found"],
+    "form_suggestions": ["specific improvements"],
+    
+    "grammar_score": 0-2,
+    "grammar_justification": "detailed explanation",
+    "grammar_errors": ["list each grammar/spelling error with location"],
+    "grammar_suggestions": ["specific fixes needed"],
+    
+    "vocabulary_score": 0-2,
+    "vocabulary_justification": "detailed explanation",
+    "vocabulary_errors": ["vocabulary issues found"],
+    "vocabulary_suggestions": ["specific vocabulary improvements"],
+    
+    "key_points_covered": ["list of covered key points"],
+    "key_points_missed": ["list of missed key points"],
+    "overall_assessment": "comprehensive summary of performance",
+    "strengths": ["specific strengths identified"],
+    "priority_improvements": ["most important areas to focus on"]
+}}"""
+
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a PTE Academic examiner. Always respond with valid JSON only."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=2000
+        )
+        
+        result = response.choices[0].message.content.strip()
+        
+        # Clean up response to ensure valid JSON
+        if result.startswith("```json"):
+            result = result[7:]
+        if result.endswith("```"):
+            result = result[:-3]
+        
+        return json.loads(result)
+        
+    except Exception as e:
+        print(f"GPT-4 Analysis Error: {e}")
+        # Fallback to basic analysis if GPT-4 fails
+        return await basic_analysis_fallback(user_summary, key_points)
+
+async def basic_analysis_fallback(user_summary: str, key_points: str) -> Dict:
+    """Fallback analysis if GPT-4 is unavailable"""
+    word_count = len(user_summary.split())
+    sentences = len([s for s in user_summary.split('.') if s.strip()])
+    
+    return {
+        "content_score": 1 if word_count > 20 else 0,
+        "content_justification": "Fallback scoring - GPT-4 unavailable",
+        "content_errors": [],
+        "content_suggestions": ["Connect to GPT-4 for detailed analysis"],
+        "form_score": 1 if 5 <= word_count <= 75 and sentences == 1 else 0,
+        "form_justification": f"Word count: {word_count}, Sentences: {sentences}",
+        "form_errors": [],
+        "form_suggestions": [],
+        "grammar_score": 1,
+        "grammar_justification": "Cannot analyze without GPT-4",
+        "grammar_errors": [],
+        "grammar_suggestions": [],
+        "vocabulary_score": 1,
+        "vocabulary_justification": "Cannot analyze without GPT-4", 
+        "vocabulary_errors": [],
+        "vocabulary_suggestions": [],
+        "key_points_covered": [],
+        "key_points_missed": [],
+        "overall_assessment": "GPT-4 analysis unavailable",
+        "strengths": [],
+        "priority_improvements": ["Ensure GPT-4 API is available"]
+    }
+
 @app.post("/api/v1/writing/summarize-written-text", response_model=SummarizeTextResponse)
 async def score_summarize_written_text(
     question_title: str = Form(...),
     reading_passage: str = Form(...),
     key_points: str = Form(...),
-    user_summary: str = Form(...)
+    user_summary: str = Form(...),
+    sample_summary: str = Form(default="")
 ):
-    # Simple scoring for now - we'll add GPT-4 later
-    word_count = len(user_summary.split())
-    
-    # PTE Scoring logic - 4 criteria only (Content, Form, Grammar, Vocabulary)
-    # Content: 0-2 points
-    content_score = 2 if word_count > 30 else 1 if word_count > 15 else 0
-    
-    # Form: 0-1 point (word count must be 5-75)
-    form_score = 1 if 5 <= word_count <= 75 else 0
-    
-    # Grammar: 0-2 points (combined with spelling)
-    grammar_score = 2 if word_count > 20 else 1
-    
-    # Vocabulary: 0-2 points
-    vocabulary_score = 2 if word_count > 25 else 1 if word_count > 10 else 0
-    
-    scores = {
-        "content": content_score,
-        "form": form_score, 
-        "grammar": grammar_score,
-        "vocabulary": vocabulary_score
-    }
-    
-    # Total score out of 7 (2+1+2+2)
-    total_score = sum(scores.values())
-    percentage = round((total_score / 7) * 100)
-    
-    if percentage >= 86:
-        band = "Excellent"
-    elif percentage >= 71:
-        band = "Very Good"
-    elif percentage >= 57:
-        band = "Good"
-    else:
-        band = "Needs Improvement"
-    
-    # Generate detailed dummy data for testing
-    ai_recommendations = []
-    ai_suggestions = {}
-    
-    # Content-based recommendations
-    if content_score < 2:
-        ai_recommendations.extend([
-            "Include more main ideas from the passage",
-            "Focus on the central theme and supporting arguments",
-            "Ensure you capture the cause-effect relationships mentioned"
-        ])
-        ai_suggestions["content"] = "Try to identify 3-4 key points from the passage and include them in your summary."
-    else:
-        ai_recommendations.append("Excellent job capturing the main ideas")
-        ai_suggestions["content"] = "Your content coverage is strong. Maintain this level of detail."
-    
-    # Form-based recommendations
-    if form_score == 0:
-        ai_recommendations.append(f"Adjust word count (currently {word_count} words, needs 5-75)")
-        ai_suggestions["form"] = "Your summary should be between 5-75 words. Practice being more concise."
-    else:
-        ai_suggestions["form"] = "Word count is within the required range. Good job!"
-    
-    # Grammar recommendations (includes spelling in PTE)
-    if grammar_score < 2:
-        ai_recommendations.append("Improve grammar and check spelling")
-        ai_suggestions["grammar"] = "Check for grammatical errors and spelling mistakes. Use proper punctuation and sentence structures."
-    else:
-        ai_suggestions["grammar"] = "Grammar and spelling are accurate. Good use of sentence structures."
-    
-    # Vocabulary recommendations
-    if vocabulary_score < 2:
-        ai_recommendations.append("Use more academic vocabulary")
-        ai_suggestions["vocabulary"] = "Replace basic words with academic alternatives (e.g., 'show' → 'demonstrate', 'important' → 'significant')."
-    else:
-        ai_suggestions["vocabulary"] = "Good use of academic vocabulary. Continue using precise terminology."
-    
-    return SummarizeTextResponse(
-        success=True,
-        scores=scores,
-        feedback={
-            "content": "Good coverage of key points" if content_score == 2 else "Need more key points" if content_score == 1 else "Missing key points",
-            "form": "Proper word count" if form_score == 1 else "Check word count (5-75 words)",
-            "grammar": "Grammar and spelling look good" if grammar_score == 2 else "Some grammar/spelling issues",
-            "vocabulary": "Good vocabulary usage" if vocabulary_score == 2 else "Try varied vocabulary" if vocabulary_score == 1 else "Limited vocabulary"
-        },
-        overall_feedback=f"Your summary scored {total_score}/7. " + (
-            "Great job!" if total_score >= 6 else
-            "Good effort, room for improvement." if total_score >= 4 else
-            "Keep practicing to improve your score."
-        ),
-        total_score=total_score,
-        percentage=percentage,
-        band=band,
-        improvements=["Focus on key points", "Check word count"] if total_score < 6 else [],
-        strengths=["Clear writing"] if total_score >= 4 else ["Attempted response"],
-        ai_recommendations=ai_recommendations,
-        ai_suggestions=ai_suggestions
-    )
+    try:
+        # Validate input
+        if not user_summary.strip():
+            raise HTTPException(status_code=400, detail="User summary cannot be empty")
+        
+        # Get GPT-4 analysis
+        analysis = await analyze_with_gpt4(
+            reading_passage=reading_passage,
+            key_points=key_points,
+            sample_summary=sample_summary,
+            user_summary=user_summary,
+            question_title=question_title
+        )
+        
+        # Extract scores
+        content_score = analysis.get("content_score", 0)
+        form_score = analysis.get("form_score", 0)
+        grammar_score = analysis.get("grammar_score", 0)
+        vocabulary_score = analysis.get("vocabulary_score", 0)
+        
+        total_score = content_score + form_score + grammar_score + vocabulary_score
+        percentage = round((total_score / 7) * 100)
+        
+        # Determine band
+        if percentage >= 86:
+            band = "Excellent"
+        elif percentage >= 71:
+            band = "Very Good"
+        elif percentage >= 57:
+            band = "Good"
+        else:
+            band = "Needs Improvement"
+        
+        # Basic form validation
+        word_count = len(user_summary.split())
+        sentence_count = len([s for s in user_summary.split('.') if s.strip()])
+        is_single_sentence = sentence_count == 1
+        
+        # Build detailed feedback
+        detailed_feedback = {
+            "content": DetailedFeedback(
+                score=content_score,
+                justification=analysis.get("content_justification", ""),
+                errors=analysis.get("content_errors", []),
+                suggestions=analysis.get("content_suggestions", [])
+            ),
+            "form": DetailedFeedback(
+                score=form_score,
+                justification=analysis.get("form_justification", ""),
+                errors=analysis.get("form_errors", []),
+                suggestions=analysis.get("form_suggestions", [])
+            ),
+            "grammar": DetailedFeedback(
+                score=grammar_score,
+                justification=analysis.get("grammar_justification", ""),
+                errors=analysis.get("grammar_errors", []),
+                suggestions=analysis.get("grammar_suggestions", [])
+            ),
+            "vocabulary": DetailedFeedback(
+                score=vocabulary_score,
+                justification=analysis.get("vocabulary_justification", ""),
+                errors=analysis.get("vocabulary_errors", []),
+                suggestions=analysis.get("vocabulary_suggestions", [])
+            )
+        }
+        
+        return SummarizeTextResponse(
+            success=True,
+            scores={
+                "content": content_score,
+                "form": form_score,
+                "grammar": grammar_score,
+                "vocabulary": vocabulary_score
+            },
+            detailed_feedback=detailed_feedback,
+            overall_feedback=analysis.get("overall_assessment", f"Your summary scored {total_score}/7."),
+            total_score=total_score,
+            percentage=percentage,
+            band=band,
+            key_points_covered=analysis.get("key_points_covered", []),
+            key_points_missed=analysis.get("key_points_missed", []),
+            grammar_errors=analysis.get("grammar_errors", []),
+            vocabulary_assessment=analysis.get("vocabulary_justification", ""),
+            improvements=analysis.get("priority_improvements", []),
+            strengths=analysis.get("strengths", []),
+            ai_recommendations=analysis.get("priority_improvements", []),
+            word_count=word_count,
+            is_single_sentence=is_single_sentence
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Scoring Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
