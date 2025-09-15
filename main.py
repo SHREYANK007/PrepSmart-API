@@ -105,23 +105,55 @@ OFFICIAL PTE MARKING CRITERIA:
    - 1 point: Single sentence, 5-75 words, starts with capital, ends with period
    - 0 points: Multiple sentences OR wrong word count OR incorrect punctuation
 
-3. GRAMMAR (0-2 points):
-   - 2 points: No grammatical errors, perfect sentence structure
-   - 1 point: 1-2 minor errors that don't affect understanding
-   - 0 points: Major grammatical errors affecting comprehension
+3. GRAMMAR (0-2 points) - BE EXTREMELY STRICT:
+   - 2 points: PERFECT grammar - no errors whatsoever (missing comma = 1 point)
+   - 1 point: 1-2 minor errors (missing comma, wrong tense, article error)
+   - 0 points: 3+ errors OR any major error affecting meaning
+
+   GRAMMAR ERRORS TO CHECK STRICTLY:
+   • Missing commas (especially before coordinating conjunctions)
+   • Wrong verb tenses or subject-verb disagreement
+   • Missing or incorrect articles (a, an, the)
+   • Spelling mistakes of any kind
+   • Wrong prepositions
+   • Incomplete sentences or run-on sentences
+   • Wrong word forms (adjective vs adverb)
+   • Capitalization errors
+   • Missing periods or wrong punctuation
 
 4. VOCABULARY (0-2 points):
    - 2 points: Appropriate academic vocabulary, excellent word choice
    - 1 point: Adequate vocabulary with some basic words
    - 0 points: Very limited, repetitive, or inappropriate vocabulary
 
-ANALYSIS REQUIRED:
-1. Check if it's a single sentence
-2. Count exact words (5-75 range)
-3. Identify ALL grammar/spelling errors with exact locations
-4. List which key points are covered vs missed
-5. Assess vocabulary level and word choices
-6. Provide specific improvement suggestions
+CRITICAL ANALYSIS REQUIRED - BE RUTHLESS:
+
+1. FORM CHECK:
+   - Count exact words (must be 5-75)
+   - Verify single sentence (no period in middle, no conjunctions creating new clauses)
+   - Check capitalization and ending punctuation
+
+2. GRAMMAR CHECK (FIND EVERY ERROR):
+   - Scan every word for spelling mistakes
+   - Check every comma placement (especially before "and", "but", "so", "or")
+   - Verify subject-verb agreement
+   - Check article usage (a/an/the)
+   - Verify correct verb tenses
+   - Check preposition usage
+   - Look for wrong word forms (e.g., "quick" vs "quickly")
+   - Check for incomplete thoughts or run-ons
+
+3. CONTENT ANALYSIS:
+   - Match user summary against each key point
+   - Identify what's covered vs completely missing
+   - Check if main idea is captured
+
+4. VOCABULARY ASSESSMENT:
+   - Rate academic level of word choices
+   - Check for repetition or basic vocabulary
+   - Note any inappropriate word usage
+
+BE EXTREMELY HARSH - PTE DEDUCTS FOR MINOR ERRORS!
 
 Return ONLY valid JSON in this exact format:
 {{
@@ -136,9 +168,9 @@ Return ONLY valid JSON in this exact format:
     "form_suggestions": ["specific improvements"],
     
     "grammar_score": 0-2,
-    "grammar_justification": "detailed explanation",
-    "grammar_errors": ["list each grammar/spelling error with location"],
-    "grammar_suggestions": ["specific fixes needed"],
+    "grammar_justification": "detailed explanation of EVERY error found",
+    "grammar_errors": ["EXAMPLE: 'Word 5: missing comma before and', 'Word 12: wrong tense should be past', 'Word 8: spelling error - enviroment should be environment'"],
+    "grammar_suggestions": ["specific fixes with exact positions"],
     
     "vocabulary_score": 0-2,
     "vocabulary_justification": "detailed explanation",
@@ -156,7 +188,7 @@ Return ONLY valid JSON in this exact format:
         response = await client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a PTE Academic examiner. Always respond with valid JSON only."},
+                {"role": "system", "content": "You are an EXTREMELY STRICT PTE Academic examiner. Deduct points for ANY grammar error - even missing commas. Be ruthless and thorough. Respond with valid JSON only."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
