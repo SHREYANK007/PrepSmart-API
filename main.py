@@ -15,7 +15,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://pte.prepsmart.au", "http://82.29.167.191", "*"],
+    allow_origins=["https://pte.prepsmart.au", "https://dashboard.prepsmart.au", "http://82.29.167.191", "*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
