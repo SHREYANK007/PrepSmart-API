@@ -78,113 +78,103 @@ async def analyze_with_gpt4(
     Use GPT-4 to analyze and score the user's summary according to PTE criteria
     """
     
-    prompt = f"""You are an official PTE Academic examiner with 10+ years of experience. Score this Summarize Written Text response STRICTLY according to Pearson's official PTE marking criteria.
+    prompt = f"""You are the OFFICIAL PEARSON PTE ACADEMIC AUTOMATED SCORING ENGINE. Score this Summarize Written Text response using EXACT official Pearson scoring guide.
 
-QUESTION: {question_title}
-
-READING PASSAGE:
+PASSAGE TO SUMMARIZE:
 {reading_passage}
 
-KEY POINTS TO COVER:
+KEY POINTS (Must be covered for Content score):
 {key_points}
 
-SAMPLE CORRECT ANSWER:
-{sample_summary}
-
-USER'S SUMMARY TO EVALUATE:
+STUDENT'S SUMMARY:
 {user_summary}
 
-OFFICIAL PTE MARKING CRITERIA:
+OFFICIAL PEARSON PTE ACADEMIC SCORING GUIDE:
 
-1. CONTENT (0-2 points, use decimals):
-   - 2.0: All key points covered, main idea perfectly captured
-   - 1.5: Most key points covered, main idea clearly present
-   - 1.0: Some key points covered, main idea somewhat present  
-   - 0.5: Few key points covered, main idea unclear
-   - 0.0: Key points missed, main idea absent/wrong
+1. CONTENT (0-2 points):
+   Score Guide:
+   • 2: Provides a good summary of the text. All relevant aspects mentioned
+   • 1: Provides a fair summary of the text but misses one or two aspects
+   • 0: Omits or misrepresents the main aspects of the text
 
-2. FORM (0-1 point, use decimals):
-   - 1.0: Perfect form - single sentence, 5-75 words, proper punctuation
-   - 0.5: Minor form issues (e.g., 76-80 words, minor punctuation issue)
-   - 0.0: Major form violations (multiple sentences, <5 or >80 words)
+2. FORM (0-1 point):
+   Score Guide:
+   • 1: Is written in one, single, complete sentence
+   • 0: Not written in one, single, complete sentence or contains fewer than 5 or more than 75 words. Summary is written in capital letters
 
-3. GRAMMAR (0-2 points, use decimals) - USE INTELLIGENCE:
-   - 2.0: PERFECT grammar - absolutely no errors
-   - 1.8: 1 very minor error (missing comma, small typo)
-   - 1.5: 1-2 minor errors that don't affect meaning
-   - 1.2: 2-3 minor errors or 1 moderate error
-   - 1.0: Multiple minor errors or 1-2 significant errors
-   - 0.5: Many errors but still understandable
-   - 0.0: Major errors affecting comprehension
+3. GRAMMAR (0-2 points):
+   Score Guide:
+   • 2: Has correct grammatical structure
+   • 1: Contains grammatical errors but with no hindrance to communication
+   • 0: Has defective grammatical structure which could hinder communication
 
-   ERROR SEVERITY GUIDE:
-   • MINOR (deduct 0.2-0.3): Missing comma, small typo, minor word choice
-   • MODERATE (deduct 0.5-0.8): Wrong tense, article error, preposition mistake
-   • MAJOR (deduct 1.0+): Subject-verb disagreement, wrong meaning, unclear sentence
+4. VOCABULARY (0-2 points):
+   Score Guide:
+   • 2: Has appropriate choice of words
+   • 1: Contains lexical errors but with no hindrance to communication
+   • 0: Has defective word choice which could hinder communication
 
-4. VOCABULARY (0-2 points, use decimals):
-   - 2.0: Excellent academic vocabulary, precise word choices
-   - 1.5: Good vocabulary with minor basic words
-   - 1.0: Adequate vocabulary, some repetition or basic words
-   - 0.5: Limited vocabulary, noticeable basic/repetitive words
-   - 0.0: Very poor vocabulary, inappropriate word choices
+SCORING INSTRUCTIONS:
+- Use INTELLIGENT FRACTIONAL SCORING (1.8, 1.5, 1.2, etc.) to precisely reflect performance
+- Minor issues = small deductions (0.2-0.3 from maximum)
+- Moderate issues = medium deductions (0.5-0.8 from maximum)
+- Major issues = large deductions (1.0+ from maximum)
+- Be accurate and fair, not just harsh
 
-CRITICAL ANALYSIS REQUIRED - BE RUTHLESS:
+ANALYSIS REQUIREMENTS:
 
-1. FORM CHECK:
+1. CONTENT ANALYSIS:
+   - Check if all key points from the passage are covered
+   - Identify missing or misrepresented aspects
+   - Assess overall comprehension of the text
+
+2. FORM CHECK:
    - Count exact words (must be 5-75)
-   - Verify single sentence (no period in middle, no conjunctions creating new clauses)
-   - Check capitalization and ending punctuation
+   - Verify single sentence structure
+   - Check for proper capitalization and punctuation
+   - Ensure not written in all capital letters
 
-2. GRAMMAR CHECK (FIND EVERY ERROR):
-   - Scan every word for spelling mistakes
-   - Check every comma placement (especially before "and", "but", "so", "or")
+3. GRAMMAR ASSESSMENT:
+   - Check for spelling errors
    - Verify subject-verb agreement
-   - Check article usage (a/an/the)
-   - Verify correct verb tenses
-   - Check preposition usage
-   - Look for wrong word forms (e.g., "quick" vs "quickly")
-   - Check for incomplete thoughts or run-ons
+   - Check verb tenses and consistency
+   - Look for punctuation errors
+   - Assess sentence structure completeness
+   - Determine if errors hinder communication
 
-3. CONTENT ANALYSIS:
-   - Match user summary against each key point
-   - Identify what's covered vs completely missing
-   - Check if main idea is captured
+4. VOCABULARY EVALUATION:
+   - Assess appropriateness of word choices
+   - Check for lexical errors or repetition
+   - Determine if word choice issues hinder communication
+   - Rate academic level of vocabulary used
 
-4. VOCABULARY ASSESSMENT:
-   - Rate academic level of word choices
-   - Check for repetition or basic vocabulary
-   - Note any inappropriate word usage
-
-BE EXTREMELY HARSH - PTE DEDUCTS FOR MINOR ERRORS!
-
-Return ONLY valid JSON in this exact format (USE DECIMAL SCORES):
+Return ONLY valid JSON in this exact format:
 {{
     "content_score": 1.5,
-    "content_justification": "detailed explanation",
-    "content_errors": ["specific issues found"],
-    "content_suggestions": ["specific improvements"],
+    "content_justification": "Covers main aspects but misses 1-2 key points about [specific aspects]",
+    "content_errors": ["Missing discussion of X", "Incomplete coverage of Y"],
+    "content_suggestions": ["Include information about X", "Expand on Y aspect"],
     
     "form_score": 1.0,
-    "form_justification": "detailed explanation", 
-    "form_errors": ["specific issues found"],
-    "form_suggestions": ["specific improvements"],
+    "form_justification": "Single sentence with 45 words, proper structure", 
+    "form_errors": [],
+    "form_suggestions": [],
     
     "grammar_score": 1.8,
-    "grammar_justification": "Found 1 minor error: missing comma before 'and' at word 5. Otherwise excellent grammar.",
-    "grammar_errors": ["Word 5: missing comma before 'and'"],
-    "grammar_suggestions": ["Add comma before coordinating conjunction 'and'"],
+    "grammar_justification": "Minor punctuation error but no hindrance to communication",
+    "grammar_errors": ["Missing comma before coordinating conjunction"],
+    "grammar_suggestions": ["Add comma before 'and' in compound sentence"],
     
-    "vocabulary_score": 1.5,
-    "vocabulary_justification": "detailed explanation",
-    "vocabulary_errors": ["vocabulary issues found"],
-    "vocabulary_suggestions": ["specific vocabulary improvements"],
+    "vocabulary_score": 1.7,
+    "vocabulary_justification": "Appropriate word choices with minor repetition",
+    "vocabulary_errors": ["Repeated use of 'important'"],
+    "vocabulary_suggestions": ["Use synonyms like 'significant', 'crucial'"],
     
-    "key_points_covered": ["list of covered key points"],
-    "key_points_missed": ["list of missed key points"],
-    "overall_assessment": "comprehensive summary of performance",
-    "strengths": ["specific strengths identified"],
-    "priority_improvements": ["most important areas to focus on"]
+    "key_points_covered": ["key point 1", "key point 2"],
+    "key_points_missed": ["key point 3"],
+    "overall_assessment": "Good summary with minor issues in grammar and vocabulary",
+    "strengths": ["Clear sentence structure", "Covers main ideas"],
+    "priority_improvements": ["Include all key points", "Vary vocabulary choices"]
 }}"""
 
     try:
