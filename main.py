@@ -56,21 +56,27 @@ async def score_summarize_written_text(
     # Simple scoring for now - we'll add GPT-4 later
     word_count = len(user_summary.split())
     
-    # Basic scoring logic
-    content_score = 2 if word_count > 30 else 1
+    # PTE Scoring logic - 4 criteria only (Content, Form, Grammar, Vocabulary)
+    # Content: 0-2 points
+    content_score = 2 if word_count > 30 else 1 if word_count > 15 else 0
+    
+    # Form: 0-1 point (word count must be 5-75)
     form_score = 1 if 5 <= word_count <= 75 else 0
-    grammar_score = 2  # Default good score
-    spelling_score = 2  # Default good score
-    vocabulary_score = 2 if word_count > 25 else 1
+    
+    # Grammar: 0-2 points (combined with spelling)
+    grammar_score = 2 if word_count > 20 else 1
+    
+    # Vocabulary: 0-2 points
+    vocabulary_score = 2 if word_count > 25 else 1 if word_count > 10 else 0
     
     scores = {
         "content": content_score,
         "form": form_score, 
         "grammar": grammar_score,
-        "spelling": spelling_score,
         "vocabulary": vocabulary_score
     }
     
+    # Total score out of 7 (2+1+2+2)
     total_score = sum(scores.values())
     percentage = round((total_score / 7) * 100)
     
@@ -106,12 +112,12 @@ async def score_summarize_written_text(
     else:
         ai_suggestions["form"] = "Word count is within the required range. Good job!"
     
-    # Grammar recommendations
-    if word_count < 20:
-        ai_recommendations.append("Use more complex sentence structures")
-        ai_suggestions["grammar"] = "Try combining simple sentences with conjunctions like 'however', 'moreover', 'furthermore'."
+    # Grammar recommendations (includes spelling in PTE)
+    if grammar_score < 2:
+        ai_recommendations.append("Improve grammar and check spelling")
+        ai_suggestions["grammar"] = "Check for grammatical errors and spelling mistakes. Use proper punctuation and sentence structures."
     else:
-        ai_suggestions["grammar"] = "Your grammar is accurate. Consider using varied sentence structures."
+        ai_suggestions["grammar"] = "Grammar and spelling are accurate. Good use of sentence structures."
     
     # Vocabulary recommendations
     if vocabulary_score < 2:
@@ -120,18 +126,14 @@ async def score_summarize_written_text(
     else:
         ai_suggestions["vocabulary"] = "Good use of academic vocabulary. Continue using precise terminology."
     
-    # Spelling suggestions
-    ai_suggestions["spelling"] = "No spelling errors detected. Maintain this accuracy."
-    
     return SummarizeTextResponse(
         success=True,
         scores=scores,
         feedback={
-            "content": "Good coverage of key points" if content_score == 2 else "Need more key points",
+            "content": "Good coverage of key points" if content_score == 2 else "Need more key points" if content_score == 1 else "Missing key points",
             "form": "Proper word count" if form_score == 1 else "Check word count (5-75 words)",
-            "grammar": "Grammar looks good",
-            "spelling": "Spelling appears correct", 
-            "vocabulary": "Good vocabulary usage" if vocabulary_score == 2 else "Try varied vocabulary"
+            "grammar": "Grammar and spelling look good" if grammar_score == 2 else "Some grammar/spelling issues",
+            "vocabulary": "Good vocabulary usage" if vocabulary_score == 2 else "Try varied vocabulary" if vocabulary_score == 1 else "Limited vocabulary"
         },
         overall_feedback=f"Your summary scored {total_score}/7. " + (
             "Great job!" if total_score >= 6 else
