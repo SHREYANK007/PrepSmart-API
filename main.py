@@ -112,11 +112,11 @@ if __name__ == "__main__":
         uvicorn.run(
             app, 
             host="0.0.0.0", 
-            port=8000,
+            port=8001,
             ssl_keyfile="key.pem",
             ssl_certfile="cert.pem"
         )
     except FileNotFoundError:
         # Fallback to HTTP if certificates don't exist
         print("SSL certificates not found, running HTTP")
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=8001)
