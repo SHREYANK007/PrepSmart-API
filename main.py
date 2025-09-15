@@ -6,13 +6,15 @@ import os
 import json
 import re
 from dotenv import load_dotenv
-import openai
+from openai import AsyncOpenAI
 from datetime import datetime
 
 load_dotenv()
 
-# Initialize OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Initialize OpenAI client
+client = AsyncOpenAI(
+    api_key=os.getenv('OPENAI_API_KEY')
+)
 
 app = FastAPI(
     title="PrepSmart Scoring API",
@@ -37,6 +39,7 @@ class DetailedFeedback(BaseModel):
 class SummarizeTextResponse(BaseModel):
     success: bool
     scores: Dict[str, int]
+    feedback: Dict[str, str]  # For backward compatibility
     detailed_feedback: Dict[str, DetailedFeedback]
     overall_feedback: str
     total_score: int
@@ -150,7 +153,7 @@ Return ONLY valid JSON in this exact format:
 }}"""
 
     try:
-        response = await openai.ChatCompletion.acreate(
+        response = await client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a PTE Academic examiner. Always respond with valid JSON only."},
@@ -278,6 +281,14 @@ async def score_summarize_written_text(
             )
         }
         
+        # Create backward-compatible feedback for frontend
+        feedback = {
+            "content": detailed_feedback["content"].justification,
+            "form": detailed_feedback["form"].justification,
+            "grammar": detailed_feedback["grammar"].justification,
+            "vocabulary": detailed_feedback["vocabulary"].justification
+        }
+        
         return SummarizeTextResponse(
             success=True,
             scores={
@@ -286,6 +297,7 @@ async def score_summarize_written_text(
                 "grammar": grammar_score,
                 "vocabulary": vocabulary_score
             },
+            feedback=feedback,
             detailed_feedback=detailed_feedback,
             overall_feedback=analysis.get("overall_assessment", f"Your summary scored {total_score}/7."),
             total_score=total_score,
