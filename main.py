@@ -15,7 +15,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://pte.prepsmart.au", "https://dashboard.prepsmart.au", "http://82.29.167.191", "*"],
+    allow_origins=["https://pte.prepsmart.au", "https://dashboard.prepsmart.au", "https://preppte.com", "http://pte.prepsmart.au", "http://dashboard.prepsmart.au", "http://82.29.167.191", "*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -107,16 +107,17 @@ if __name__ == "__main__":
     import uvicorn
     import ssl
     
-    # Try to run with SSL if certificates exist
+    # Use Let's Encrypt certificates with ptewizard.com
+    domain = "ptewizard.com"  # Using ptewizard.com domain
+    
     try:
         uvicorn.run(
             app, 
             host="0.0.0.0", 
             port=8001,
-            ssl_keyfile="key.pem",
-            ssl_certfile="cert.pem"
+            ssl_keyfile=f"/etc/letsencrypt/live/{domain}-0001/privkey.pem",
+            ssl_certfile=f"/etc/letsencrypt/live/{domain}-0001/fullchain.pem"
         )
     except FileNotFoundError:
-        # Fallback to HTTP if certificates don't exist
         print("SSL certificates not found, running HTTP")
         uvicorn.run(app, host="0.0.0.0", port=8001)
