@@ -31,18 +31,18 @@ app.add_middleware(
 )
 
 class DetailedFeedback(BaseModel):
-    score: int
+    score: float  # Changed to float for decimal scoring
     justification: str
     errors: List[str]
     suggestions: List[str]
 
 class SummarizeTextResponse(BaseModel):
     success: bool
-    scores: Dict[str, int]
+    scores: Dict[str, float]  # Changed to float for decimal scoring
     feedback: Dict[str, str]  # For backward compatibility
     detailed_feedback: Dict[str, DetailedFeedback]
     overall_feedback: str
-    total_score: int
+    total_score: float  # Changed to float
     percentage: int
     band: str
     key_points_covered: List[str]
@@ -96,35 +96,38 @@ USER'S SUMMARY TO EVALUATE:
 
 OFFICIAL PTE MARKING CRITERIA:
 
-1. CONTENT (0-2 points):
-   - 2 points: All key points covered, main idea clearly present
-   - 1 point: Most key points covered, main idea somewhat present  
-   - 0 points: Key points missed, main idea unclear/missing
+1. CONTENT (0-2 points, use decimals):
+   - 2.0: All key points covered, main idea perfectly captured
+   - 1.5: Most key points covered, main idea clearly present
+   - 1.0: Some key points covered, main idea somewhat present  
+   - 0.5: Few key points covered, main idea unclear
+   - 0.0: Key points missed, main idea absent/wrong
 
-2. FORM (0-1 point):
-   - 1 point: Single sentence, 5-75 words, starts with capital, ends with period
-   - 0 points: Multiple sentences OR wrong word count OR incorrect punctuation
+2. FORM (0-1 point, use decimals):
+   - 1.0: Perfect form - single sentence, 5-75 words, proper punctuation
+   - 0.5: Minor form issues (e.g., 76-80 words, minor punctuation issue)
+   - 0.0: Major form violations (multiple sentences, <5 or >80 words)
 
-3. GRAMMAR (0-2 points) - BE EXTREMELY STRICT:
-   - 2 points: PERFECT grammar - no errors whatsoever (missing comma = 1 point)
-   - 1 point: 1-2 minor errors (missing comma, wrong tense, article error)
-   - 0 points: 3+ errors OR any major error affecting meaning
+3. GRAMMAR (0-2 points, use decimals) - USE INTELLIGENCE:
+   - 2.0: PERFECT grammar - absolutely no errors
+   - 1.8: 1 very minor error (missing comma, small typo)
+   - 1.5: 1-2 minor errors that don't affect meaning
+   - 1.2: 2-3 minor errors or 1 moderate error
+   - 1.0: Multiple minor errors or 1-2 significant errors
+   - 0.5: Many errors but still understandable
+   - 0.0: Major errors affecting comprehension
 
-   GRAMMAR ERRORS TO CHECK STRICTLY:
-   • Missing commas (especially before coordinating conjunctions)
-   • Wrong verb tenses or subject-verb disagreement
-   • Missing or incorrect articles (a, an, the)
-   • Spelling mistakes of any kind
-   • Wrong prepositions
-   • Incomplete sentences or run-on sentences
-   • Wrong word forms (adjective vs adverb)
-   • Capitalization errors
-   • Missing periods or wrong punctuation
+   ERROR SEVERITY GUIDE:
+   • MINOR (deduct 0.2-0.3): Missing comma, small typo, minor word choice
+   • MODERATE (deduct 0.5-0.8): Wrong tense, article error, preposition mistake
+   • MAJOR (deduct 1.0+): Subject-verb disagreement, wrong meaning, unclear sentence
 
-4. VOCABULARY (0-2 points):
-   - 2 points: Appropriate academic vocabulary, excellent word choice
-   - 1 point: Adequate vocabulary with some basic words
-   - 0 points: Very limited, repetitive, or inappropriate vocabulary
+4. VOCABULARY (0-2 points, use decimals):
+   - 2.0: Excellent academic vocabulary, precise word choices
+   - 1.5: Good vocabulary with minor basic words
+   - 1.0: Adequate vocabulary, some repetition or basic words
+   - 0.5: Limited vocabulary, noticeable basic/repetitive words
+   - 0.0: Very poor vocabulary, inappropriate word choices
 
 CRITICAL ANALYSIS REQUIRED - BE RUTHLESS:
 
@@ -155,24 +158,24 @@ CRITICAL ANALYSIS REQUIRED - BE RUTHLESS:
 
 BE EXTREMELY HARSH - PTE DEDUCTS FOR MINOR ERRORS!
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON in this exact format (USE DECIMAL SCORES):
 {{
-    "content_score": 0-2,
+    "content_score": 1.5,
     "content_justification": "detailed explanation",
     "content_errors": ["specific issues found"],
     "content_suggestions": ["specific improvements"],
     
-    "form_score": 0-1,
+    "form_score": 1.0,
     "form_justification": "detailed explanation", 
     "form_errors": ["specific issues found"],
     "form_suggestions": ["specific improvements"],
     
-    "grammar_score": 0-2,
-    "grammar_justification": "detailed explanation of EVERY error found",
-    "grammar_errors": ["EXAMPLE: 'Word 5: missing comma before and', 'Word 12: wrong tense should be past', 'Word 8: spelling error - enviroment should be environment'"],
-    "grammar_suggestions": ["specific fixes with exact positions"],
+    "grammar_score": 1.8,
+    "grammar_justification": "Found 1 minor error: missing comma before 'and' at word 5. Otherwise excellent grammar.",
+    "grammar_errors": ["Word 5: missing comma before 'and'"],
+    "grammar_suggestions": ["Add comma before coordinating conjunction 'and'"],
     
-    "vocabulary_score": 0-2,
+    "vocabulary_score": 1.5,
     "vocabulary_justification": "detailed explanation",
     "vocabulary_errors": ["vocabulary issues found"],
     "vocabulary_suggestions": ["specific vocabulary improvements"],
@@ -188,7 +191,7 @@ Return ONLY valid JSON in this exact format:
         response = await client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are an EXTREMELY STRICT PTE Academic examiner. Deduct points for ANY grammar error - even missing commas. Be ruthless and thorough. Respond with valid JSON only."},
+                {"role": "system", "content": "You are a PTE Academic examiner. Use INTELLIGENT FRACTIONAL SCORING (1.8, 1.5, etc.) to precisely reflect error severity. Minor errors = small deductions (0.2-0.3), major errors = larger deductions (1.0+). Be accurate, not just harsh. Respond with valid JSON only."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
@@ -267,7 +270,7 @@ async def score_summarize_written_text(
         grammar_score = analysis.get("grammar_score", 0)
         vocabulary_score = analysis.get("vocabulary_score", 0)
         
-        total_score = content_score + form_score + grammar_score + vocabulary_score
+        total_score = round(content_score + form_score + grammar_score + vocabulary_score, 1)
         percentage = round((total_score / 7) * 100)
         
         # Determine band
