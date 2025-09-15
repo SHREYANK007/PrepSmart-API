@@ -1,96 +1,11 @@
-# FastAPI and ASGI Server
+# Essential packages for simple API
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-gunicorn==21.2.0
-
-# Audio Processing
-whisper==1.1.10
-librosa==0.10.1
-pyaudio==0.2.11
-webrtcvad==2.0.10
-pydub==0.25.1
-scipy==1.11.4
-numpy==1.24.3
-
-# AI and ML
-openai==1.3.7
-transformers==4.35.2
-torch==2.1.1
-torchaudio==2.1.1
-
-# Data Processing
-pandas==2.1.3
-nltk==3.8.1
-spacy==3.7.2
-
-# Database
-sqlalchemy==2.0.23
-asyncpg==0.29.0  # PostgreSQL async driver
-motor==3.3.2     # MongoDB async driver
-alembic==1.12.1  # Database migrations
-
-# Authentication & Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
+python-dotenv==1.0.0
+pydantic==2.5.0
 
-# HTTP Client & Requests
+# For future AI integration
+openai==1.3.7
 httpx==0.25.2
 aiofiles==23.2.1
-requests==2.31.0
-
-# File Storage
-boto3==1.34.0      # AWS S3
-cloudflare==2.11.6  # CloudFlare R2
-
-# Validation & Serialization
-pydantic==2.5.0
-pydantic-settings==2.1.0
-
-# Caching & Background Tasks
-redis==5.0.1
-celery==5.3.4
-
-# Monitoring & Logging
-structlog==23.2.0
-sentry-sdk[fastapi]==1.38.0
-
-# Rate Limiting & Security
-slowapi==0.1.9
-python-cors==1.7.0
-
-# Environment & Configuration
-python-dotenv==1.0.0
-pyyaml==6.0.1
-
-# Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-httpx==0.25.2  # For testing FastAPI
-factory-boy==3.3.0
-faker==20.1.0
-
-# Code Quality
-black==23.11.0
-isort==5.12.0
-flake8==6.1.0
-mypy==1.7.1
-
-# System Monitoring
-psutil==5.9.6
-
-# Audio Format Support
-soundfile==0.12.1
-resampy==0.4.2
-
-# WordPress Integration
-wordpress-api==1.2.9
-
-# Date & Time
-python-dateutil==2.8.2
-pytz==2023.3
-
-# Utils
-click==8.1.7
-rich==13.7.0  # Beautiful terminal output
-typer==0.9.0  # CLI interface
