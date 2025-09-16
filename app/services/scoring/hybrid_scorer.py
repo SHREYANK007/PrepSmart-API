@@ -291,6 +291,79 @@ Respond in JSON format:
             logger.error(f"GPT analysis failed: {e}")
             return {"success": False, "reason": str(e)}
     
+    def gpt_double_check_analysis(self, user_summary: str, passage: str, potential_issues: Dict) -> Dict:
+        """
+        STEP 2: GPT-4o Double-Check Verification System
+        GPT verifies all rule-based findings and provides detailed feedback
+        """
+        if not self.use_gpt:
+            return {"success": False, "reason": "GPT not available"}
+            
+        try:
+            initial_scores = potential_issues["initial_scores"]
+            grammar_issues = potential_issues["grammar_errors"]
+            vocab_issues = potential_issues["vocabulary_errors"]
+            
+            prompt = f"""You are an expert PTE scorer with APEUni-level strictness. You must DOUBLE-CHECK and VERIFY the findings from automated tools.
+
+ORIGINAL PASSAGE:
+{passage}
+
+USER SUMMARY:
+{user_summary}
+
+STEP 1 AUTOMATED FINDINGS:
+- Grammar Issues Found: {grammar_issues}
+- Vocabulary Issues Found: {vocab_issues}
+- Initial Scores: Grammar={initial_scores['grammar']}/2, Vocabulary={initial_scores['vocabulary']}/2, Content={initial_scores['content']}/2, Form={initial_scores['form']}/1
+
+YOUR TASK - VERIFY AND ENHANCE:
+1. Check EVERY grammar issue found - are they real errors?
+2. Find ANY additional errors the tools missed
+3. Verify vocabulary problems and find more
+4. Provide detailed explanations for EVERY deduction
+5. Be STRICT like APEUni - every small error counts
+
+SCORING RULES:
+- Grammar: Start at 2.0, deduct 0.5 per error
+- Vocabulary: Start at 2.0, deduct 0.5 per spelling/word choice error  
+- Content: Evaluate understanding depth
+- Form: 5-75 words, single sentence
+
+Respond in JSON format:
+{{
+    "verified_grammar_score": 1.5,
+    "verified_vocabulary_score": 1.5,
+    "verified_content_score": 1.8,
+    "verified_form_score": 1.0,
+    "detailed_issues": {{
+        "grammar_details": ["Specific error 1 with location", "Specific error 2 with location"],
+        "vocabulary_details": ["Vocab issue 1", "Vocab issue 2"],
+        "additional_errors_found": ["New error GPT found", "Another new error"]
+    }},
+    "strengths": ["What the user did well"],
+    "improvements": ["Specific actionable improvements"],
+    "harsh_feedback": "Detailed paragraph explaining every deduction like APEUni would"
+}}
+
+BE HARSH AND DETAILED. Find every tiny error."""
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=800,
+                temperature=0.1
+            )
+            
+            import json
+            result = json.loads(response.choices[0].message.content)
+            result["success"] = True
+            return result
+            
+        except Exception as e:
+            logger.error(f"GPT double-check failed: {e}")
+            return {"success": False, "reason": str(e)}
+    
     def score_form(self, text: str) -> Tuple[float, List[str]]:
         """
         Form scoring: strict regex validation (not GPT guessing)
@@ -329,49 +402,72 @@ Respond in JSON format:
     
     def comprehensive_score(self, user_summary: str, passage: str, key_points: str) -> Dict:
         """
-        Complete hybrid scoring - combines rule-based engines + GPT intelligence
-        Returns full scoring breakdown like APEUni with enhanced GPT insights
+        2-STEP VERIFICATION SYSTEM:
+        Step 1: Rule-based engines find ALL potential issues
+        Step 2: GPT-4o double-checks everything and provides detailed feedback
         """
         try:
-            print("DEBUG: Starting comprehensive hybrid scoring (Rule-based + GPT)")
+            print("DEBUG: Starting 2-STEP VERIFICATION SYSTEM")
             
-            # RULE-BASED SCORING (Foundation)
+            # STEP 1: RULE-BASED DETECTION (Find ALL potential issues)
+            print("DEBUG: STEP 1 - Rule-based detection")
             grammar_score, grammar_errors = self.score_grammar(user_summary)
             vocab_score, vocab_errors = self.score_vocabulary(user_summary, passage)
             content_score, content_feedback = self.score_content(user_summary, key_points, passage)
             form_score, form_feedback = self.score_form(user_summary)
             
-            print(f"DEBUG: Rule-based scores - G:{grammar_score}, V:{vocab_score}, C:{content_score}, F:{form_score}")
+            print(f"DEBUG: Step 1 results - G:{grammar_score}, V:{vocab_score}, C:{content_score}, F:{form_score}")
+            print(f"DEBUG: Found issues - Grammar: {len(grammar_errors)}, Vocab: {len(vocab_errors)}")
             
-            # GPT INTELLIGENCE ENHANCEMENT
-            gpt_analysis = self.gpt_enhanced_analysis(user_summary, passage, key_points)
+            # Collect ALL potential issues for GPT verification
+            all_potential_issues = {
+                "grammar_errors": grammar_errors,
+                "vocabulary_errors": vocab_errors, 
+                "content_gaps": content_feedback,
+                "form_issues": form_feedback,
+                "initial_scores": {
+                    "grammar": grammar_score,
+                    "vocabulary": vocab_score,
+                    "content": content_score,
+                    "form": form_score
+                }
+            }
             
-            if gpt_analysis.get("success"):
-                print("DEBUG: GPT analysis successful, enhancing scores")
-                # Blend GPT insights with rule-based scores
-                gpt_content = gpt_analysis.get("content_accuracy", content_score)
-                gpt_vocab = gpt_analysis.get("vocabulary_quality", vocab_score)
+            # STEP 2: GPT-4O VERIFICATION & DETAILED ANALYSIS
+            print("DEBUG: STEP 2 - GPT-4o verification and detailed analysis")
+            gpt_verification = self.gpt_double_check_analysis(user_summary, passage, all_potential_issues)
+            
+            if gpt_verification.get("success"):
+                print("DEBUG: GPT verification successful - applying verified scores")
                 
-                # Weighted combination: 70% rule-based + 30% GPT intelligence
-                enhanced_content = (content_score * 0.7) + (gpt_content * 0.3)
-                enhanced_vocab = (vocab_score * 0.7) + (gpt_vocab * 0.3)
+                # Use GPT's verified scores (GPT has final say)
+                final_grammar = gpt_verification.get("verified_grammar_score", grammar_score)
+                final_vocab = gpt_verification.get("verified_vocabulary_score", vocab_score)
+                final_content = gpt_verification.get("verified_content_score", content_score)
+                final_form = gpt_verification.get("verified_form_score", form_score)
                 
-                # Use enhanced scores
-                content_score = round(min(2.0, enhanced_content), 1)
-                vocab_score = round(min(2.0, enhanced_vocab), 1)
+                # Get detailed feedback from GPT
+                detailed_issues = gpt_verification.get("detailed_issues", {})
+                strengths = gpt_verification.get("strengths", [])
+                improvements = gpt_verification.get("improvements", [])
                 
-                # Add GPT insights to feedback
-                gpt_feedback = gpt_analysis.get("detailed_feedback", {})
-                strengths = gpt_feedback.get("strengths", [])
-                improvements = gpt_feedback.get("improvements", [])
-                vocab_issues = gpt_feedback.get("vocabulary_issues", [])
+                print(f"DEBUG: Final verified scores - G:{final_grammar}, V:{final_vocab}, C:{final_content}, F:{final_form}")
                 
-                print(f"DEBUG: Enhanced scores with GPT - C:{content_score}, V:{vocab_score}")
+                # Update scores and errors with GPT verification
+                grammar_score = final_grammar
+                vocab_score = final_vocab
+                content_score = final_content
+                form_score = final_form
+                
+                # Enhanced error lists with GPT details
+                grammar_errors = detailed_issues.get("grammar_details", grammar_errors)
+                vocab_errors = detailed_issues.get("vocabulary_details", vocab_errors)
+                
             else:
-                print(f"DEBUG: GPT analysis failed: {gpt_analysis.get('reason', 'Unknown')}")
+                print(f"DEBUG: GPT verification failed: {gpt_verification.get('reason', 'Unknown')}")
+                print("DEBUG: Using rule-based scores only")
                 strengths = []
                 improvements = []
-                vocab_issues = []
             
             # Calculate total with enhanced scores
             total_score = grammar_score + vocab_score + content_score + form_score
