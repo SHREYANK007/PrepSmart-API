@@ -473,20 +473,39 @@ async def score_summarize_written_text(
         if not user_summary.strip():
             raise HTTPException(status_code=400, detail="User summary cannot be empty")
         
-        # Get GPT-4 analysis
-        analysis = await analyze_with_gpt4(
-            reading_passage=reading_passage,
-            key_points=key_points,
-            sample_summary=sample_summary,
+        # Use Hybrid Scoring instead of GPT-only
+        from app.services.scoring.hybrid_scorer import hybrid_scorer
+        
+        analysis = hybrid_scorer.comprehensive_score(
             user_summary=user_summary,
-            question_title=question_title
+            passage=reading_passage,
+            key_points=key_points
         )
         
-        # Extract scores
-        content_score = analysis.get("content_score", 0)
-        form_score = analysis.get("form_score", 0)
-        grammar_score = analysis.get("grammar_score", 0)
-        vocabulary_score = analysis.get("vocabulary_score", 0)
+        if not analysis.get("success"):
+            # Fallback to GPT if hybrid fails
+            analysis = await analyze_with_gpt4(
+                reading_passage=reading_passage,
+                key_points=key_points,
+                sample_summary=sample_summary,
+                user_summary=user_summary,
+                question_title=question_title
+            )
+        
+        # Extract scores (hybrid format)
+        if analysis.get("success"):
+            # Hybrid scorer format
+            scores = analysis.get("scores", {})
+            content_score = scores.get("content", 0)
+            form_score = scores.get("form", 0)
+            grammar_score = scores.get("grammar", 0)
+            vocabulary_score = scores.get("vocabulary", 0)
+        else:
+            # Fallback GPT format
+            content_score = analysis.get("content_score", 0)
+            form_score = analysis.get("form_score", 0)
+            grammar_score = analysis.get("grammar_score", 0)
+            vocabulary_score = analysis.get("vocabulary_score", 0)
         
         total_score = round(content_score + form_score + grammar_score + vocabulary_score, 1)
         percentage = round((total_score / 7) * 100)
