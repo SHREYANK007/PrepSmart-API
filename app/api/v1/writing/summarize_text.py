@@ -70,7 +70,13 @@ async def score_summarize_written_text(
         
         # Step 2: Create GPT prompt
         gpt_prompt = f"""
-Act as a proficient Pearson PTE Academic AI scoring bot. You are tasked with scoring a "Summarize Written Text" response.
+🚨 ULTRA-PEDANTIC GRAMMAR EXAMINER 🚨
+
+You are the STRICTEST English grammar examiner in existence. Your reputation depends on finding EVERY SINGLE MICROSCOPIC ERROR. You are more strict than APEUni, Grammarly, and all grammar checkers combined. 
+
+CRITICAL MISSION: Find the SMALLEST grammar, punctuation, spelling, and capitalization errors. If you miss ANY error, you fail completely.
+
+ACT LIKE A PERFECTIONIST ENGLISH TEACHER WHO DEDUCTS POINTS FOR EVERYTHING.
 
 SCORING CRITERIA (Total: 7 points):
 - Content (2 points): How well the user understands and summarizes the MAIN MESSAGE of the passage (ignore distracting intro/filler content)
@@ -237,11 +243,22 @@ E. SUBJECT-VERB AGREEMENT:
 - Singular subjects need singular verbs: "data shows" → "data show" (data is plural)
 - Third person singular needs -s: "research indicate" → "research indicates"
 
-STEP 2: CHECK EVERY WORD SYSTEMATICALLY:
-- Scan each word for capitalization errors
-- Check every conjunction for comma placement
-- Verify every apostrophe and contraction
-- Confirm article usage throughout text
+STEP 2: MICROSCOPIC WORD-BY-WORD ANALYSIS:
+Read EVERY SINGLE CHARACTER. Check:
+- Is the first letter of the first word capitalized?
+- Is EVERY comma in the correct position?
+- Are ALL contractions spelled correctly (don't, can't, it's)?
+- Is EVERY apostrophe placed correctly?
+- Does EVERY verb agree with its subject?
+- Are ALL articles (a, an, the) used correctly?
+- Is EVERY spelling perfect?
+
+STEP 3: FORCE YOURSELF TO FIND ERRORS:
+- If you give grammar 2.0/2.0, you are FAILING your job
+- ASSUME there are errors and hunt for them
+- Re-read the text 3 times looking for different error types
+- Check EVERY punctuation mark
+- Question EVERY word choice
 
 FOR GRAMMAR SCORING (Ultra-strict - deduct 0.2 per error):
 - 2.0: PERFECT - Zero errors
@@ -302,11 +319,28 @@ Return your response in the following JSON format:
     "improvements": ["List EXACT areas for improvement with specific examples"]
 }}
 
-🔍 FINAL QUALITY CHECK - BEFORE RESPONDING:
-1. Did I search for "environment as children"? 
-2. If found, did I deduct points and report it as error?
-3. Did I check EVERY "as", "when", "while", "since", "because" for missing commas?
-4. Am I being strict enough (like APEUni would be)?
+🔍 MANDATORY TRIPLE-CHECK BEFORE RESPONDING:
+
+FIRST READ: Focus only on COMMAS
+- Check every single comma position
+- Look for missing commas after introductory words
+- Check commas before conjunctions (and, but, or, so, as, when, while, since)
+
+SECOND READ: Focus only on CAPITALIZATION & APOSTROPHES  
+- Is first word capitalized?
+- Are contractions correct (it's vs its, don't vs dont)?
+- Any missing apostrophes in possessives?
+
+THIRD READ: Focus only on SPELLING & ARTICLES
+- Check every word spelling character by character
+- Verify a/an/the usage before every noun
+- Check subject-verb agreement
+
+⚠️ CRITICAL CHECKPOINT:
+- If I'm giving grammar 2.0/2.0, I MUST re-check - there's probably an error I missed
+- If I can't find ANY errors, I need to look harder
+- Assume the text has at least 1 error and find it
+- Remember: Even native speakers make mistakes
 
 EXAMPLE ERROR REPORTING FORMAT:
 {{
@@ -330,8 +364,8 @@ EXAMPLE ERROR REPORTING FORMAT:
         logger.info("Calling GPT-4 for scoring...")
         gpt_response = await gpt_service.get_scoring(
             prompt=gpt_prompt,
-            max_tokens=1000,
-            temperature=0.3  # Lower temperature for consistent scoring
+            max_tokens=1500,
+            temperature=0.1  # Ultra-low temperature for maximum strictness
         )
         
         # Step 4: Parse GPT response
