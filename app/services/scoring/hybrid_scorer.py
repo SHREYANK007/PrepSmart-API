@@ -40,10 +40,10 @@ class HybridScorer:
         try:
             matches = self.grammar_tool.check(text)
             
-            # Categorize errors with different penalties
-            critical_errors = []  # -0.3 each
-            minor_errors = []     # -0.2 each
-            tiny_errors = []      # -0.1 each
+            # Categorize errors with different penalties (harsher like APEUni)
+            critical_errors = []  # -0.5 each
+            minor_errors = []     # -0.5 each (make all errors equal penalty)
+            tiny_errors = []      # -0.5 each
             
             for match in matches:
                 error_type = match.ruleId
@@ -59,11 +59,11 @@ class HybridScorer:
                 else:
                     tiny_errors.append(error_msg)
             
-            # Calculate deductions (Pearson-style micro-penalties)
+            # Calculate deductions (APEUni-style harsh penalties - 0.5 per error)
             total_deduction = (
-                len(critical_errors) * 0.3 +
-                len(minor_errors) * 0.2 +
-                len(tiny_errors) * 0.1
+                len(critical_errors) * 0.5 +
+                len(minor_errors) * 0.5 +
+                len(tiny_errors) * 0.5
             )
             
             # Cap at 2.0 maximum
@@ -116,7 +116,7 @@ class HybridScorer:
                 total_deduction += 0.5
             elif redundancy_ratio > 0.5:
                 errors.append("High word repetition from passage")
-                total_deduction += 0.3
+                total_deduction += 0.5
             
             # 3. Inappropriate informal words
             informal_words = ['kids', 'stuff', 'things', 'guys', 'gonna', 'wanna']
@@ -268,6 +268,11 @@ class HybridScorer:
                     "total_vocabulary_errors": len(vocab_errors),
                     "error_breakdown": f"Grammar: {len(grammar_errors)}, Vocabulary: {len(vocab_errors)}, Content gaps: {2.0 - content_score}, Form issues: {1.0 - form_score}"
                 },
+                # Add fields that main.py expects
+                "grammar_justification": f"Grammar score: {grammar_score}/2.0. " + ("; ".join(grammar_errors[:3]) if grammar_errors else "No grammar errors found"),
+                "vocabulary_justification": f"Vocabulary score: {vocab_score}/2.0. " + ("; ".join(vocab_errors[:3]) if vocab_errors else "No vocabulary errors found"),
+                "content_justification": f"Content score: {content_score}/2.0. " + ("; ".join(content_feedback[:2]) if content_feedback else "Good content coverage"),
+                "form_justification": f"Form score: {form_score}/1.0. " + ("; ".join(form_feedback) if form_feedback else "Perfect form"),
                 "feedback": {
                     "grammar": f"Grammar score: {grammar_score}/2.0. " + "; ".join(grammar_errors[:3]),
                     "vocabulary": f"Vocabulary score: {vocab_score}/2.0. " + "; ".join(vocab_errors[:3]),
