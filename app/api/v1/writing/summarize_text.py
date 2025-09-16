@@ -73,53 +73,51 @@ async def score_summarize_written_text(
 Act as a proficient Pearson PTE Academic AI scoring bot. You are tasked with scoring a "Summarize Written Text" response.
 
 SCORING CRITERIA (Total: 7 points):
-- Content (2 points): How well the key points from the passage are covered
+- Content (2 points): How well the user understands and summarizes the MAIN MESSAGE of the passage (ignore distracting intro/filler content)
 - Form (1 point): Single sentence between 5-75 words
-- Grammar (2 points): Grammatical correctness and sentence structure - BE EXTREMELY STRICT
-- Vocabulary (2 points): Appropriate word choice and range
+- Grammar (2 points): Grammatical correctness and sentence structure - BE ULTRA-HARSH ON EVERY MICROSCOPIC ERROR
+- Vocabulary (2 points): Word choice, spelling, and language precision - BE ULTRA-HARSH ON EVERY TINY MISTAKE
 
 🚨 ULTRA-STRICT GRAMMAR RULES - DEDUCT FOR EVERY TINY ERROR:
 
-⚠️ MANDATORY COMMA RULES (DEDUCT 0.3 POINTS EACH):
-1. MISSING COMMA BEFORE DEPENDENT CLAUSES:
-   - "environment as children" → ERROR! Should be "environment, as children"  
-   - "time when people" → ERROR! Should be "time, when people"
-   - "situation where students" → ERROR! Should be "situation, where students"
-   - "way that researchers" → ERROR! Should be "way, that researchers"
-   - "data that shows" → ERROR! Should be "data, that shows"
+⚠️ MICROSCOPIC GRAMMAR RULES (DEDUCT 0.2 POINTS EACH TINY ERROR):
+1. COMMA ERRORS - CATCH EVERY SINGLE ONE:
+   - Missing comma before subordinating conjunctions: as, when, while, although, since, because, if, unless, until, before, after, where, that, which
+   - Missing comma in compound sentences before: and, but, or, so, yet, for, nor
+   - Missing comma after introductory phrases
+   - Missing comma around non-essential clauses
 
-2. MISSING COMMA WITH SUBORDINATING CONJUNCTIONS:
-   - Words requiring commas: as, when, while, although, since, because, if, unless, until, before, after, where, that
-   - EVERY instance must have comma before these words
+2. APOSTROPHE ERRORS - ZERO TOLERANCE:
+   - Missing apostrophes in contractions: wont→won't, cant→can't, dont→don't, weve→we've
+   - Missing possessive apostrophes: childs→child's, students→student's
+   - Wrong its/it's usage
 
-3. MISSING COMMAS IN COMPOUND SENTENCES:
-   - Before: and, but, or, so, yet, for, nor
-   - "children resisted longer and those were deceived" → ERROR! Should be "children resisted longer, and those were deceived"
+3. ARTICLE ERRORS - CATCH EVERY MISSING/WRONG ARTICLE:
+   - Missing "a", "an", "the" 
+   - Wrong a/an usage before vowel sounds
+   - Incorrect definite/indefinite article choice
 
-4. MISSING APOSTROPHES:
-   - "childs" → ERROR! Should be "child's"  
-   - "its" vs "it's" errors
-   - "wont" → ERROR! Should be "won't"
-   - "cant" → ERROR! Should be "can't"
+4. SUBJECT-VERB AGREEMENT - EVERY DISAGREEMENT:
+   - Singular/plural mismatches
+   - "data shows"→"data show", "research indicate"→"research indicates"
+   - Third person singular -s endings
 
-5. ARTICLE ERRORS (DEDUCT 0.2 POINTS EACH):
-   - Missing "a", "an", "the" where required
-   - Wrong article usage (a/an confusion)
-   - "researcher found" → ERROR! Should be "the researcher found" or "a researcher found"
+5. PREPOSITION ERRORS - ALL WRONG PREPOSITIONS:
+   - "different than"→"different from"
+   - "impact on"/"impact of" confusion
+   - Wrong preposition with specific verbs/nouns
 
-6. SUBJECT-VERB AGREEMENT (DEDUCT 0.3 POINTS EACH):
-   - "data shows" → ERROR! Should be "data show" (data is plural)
-   - "research indicate" → ERROR! Should be "research indicates"
-   - Every disagreement must be caught
+6. CAPITALIZATION ERRORS:
+   - Missing capital letters at sentence start
+   - Wrong capitalization of proper nouns
 
-7. PREPOSITION ERRORS (DEDUCT 0.2 POINTS EACH):
-   - "different than" → ERROR! Should be "different from"
-   - "impact on" vs "impact of" errors
-   - Wrong preposition usage
+7. SPELLING ERRORS - EVERY MISSPELLING:
+   - Even 1-letter mistakes count
+   - Typos, homophones, common misspellings
 
-8. TENSE CONSISTENCY (DEDUCT 0.3 POINTS EACH):
-   - Switching between past/present tense within sentence
-   - Must maintain consistent tense throughout
+8. WORD ORDER/SYNTAX ERRORS:
+   - Misplaced modifiers
+   - Awkward word arrangements
 
 🚨 ULTRA-STRICT VOCABULARY RULES - DEDUCT FOR EVERY ERROR:
 
@@ -171,10 +169,13 @@ Title: {question_title}
 READING PASSAGE:
 {reading_passage}
 
-KEY POINTS TO COVER:
-{key_points}
+🧠 CONTENT ANALYSIS INSTRUCTIONS:
+1. Read the ENTIRE passage and identify the CORE MESSAGE/MAIN IDEA
+2. Ignore introductory fluff, background info, or distracting details
+3. Focus on what the passage is REALLY trying to communicate
+4. Judge if the user captured this main essence, not just random details
 
-{f"SAMPLE SUMMARY (for reference): {sample_summary}" if sample_summary else ""}
+CRITICAL: Do NOT rely on predefined key points - use YOUR intelligence to determine what's important!
 
 USER'S SUMMARY:
 {user_summary}
@@ -211,22 +212,31 @@ EVALUATION TASK - BE ULTRA-STRICT LIKE APEUNI:
 3. Every grammar rule violation
 4. Every punctuation error
 
-FOR GRAMMAR SCORING (Ultra-strict):
-- 2.0: PERFECT - Zero errors of any kind
-- 1.7: 1 minor error (missing comma)
-- 1.4: 2 errors 
-- 1.0: 3 errors
-- 0.7: 4 errors
-- 0.4: 5 errors
-- 0.0: 6+ errors
+FOR GRAMMAR SCORING (Ultra-strict - deduct 0.2 per error):
+- 2.0: PERFECT - Zero errors
+- 1.8: 1 tiny error (missing comma, apostrophe)
+- 1.6: 2 errors 
+- 1.4: 3 errors
+- 1.2: 4 errors
+- 1.0: 5 errors
+- 0.8: 6 errors
+- 0.6: 7 errors
+- 0.4: 8 errors
+- 0.2: 9 errors
+- 0.0: 10+ errors
 
-FOR VOCABULARY SCORING (Ultra-strict):
+FOR VOCABULARY SCORING (Ultra-strict - deduct 0.2 per error):
 - 2.0: PERFECT - Zero spelling/word choice errors
-- 1.6: 1 minor error
-- 1.2: 2 errors
-- 0.8: 3 errors
-- 0.4: 4 errors
-- 0.0: 5+ errors
+- 1.8: 1 tiny error (spelling, word choice)
+- 1.6: 2 errors
+- 1.4: 3 errors
+- 1.2: 4 errors
+- 1.0: 5 errors
+- 0.8: 6 errors
+- 0.6: 7 errors
+- 0.4: 8 errors
+- 0.2: 9 errors
+- 0.0: 10+ errors
 
 Return your response in the following JSON format:
 {{
