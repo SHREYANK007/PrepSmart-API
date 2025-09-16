@@ -208,33 +208,40 @@ EVALUATION TASK - BE ULTRA-STRICT LIKE APEUNI:
 
 🚨 MANDATORY CHECKS - DO THESE EXACT STEPS:
 
-STEP 1: CHECK EVERY SINGLE COMMA POSITION (like APEUni):
+STEP 1: APPLY UNIVERSAL ENGLISH GRAMMAR RULES:
 
-A. AFTER INTRODUCTORY PHRASES:
-- "on a plate" → needs comma after if followed by new clause
-- "also" → needs comma after if it starts a new thought
-- "thus" → needs comma after
-- "however" → needs comma after
-- "therefore" → needs comma after
+A. COMMA RULES:
+- After introductory words/phrases: however, therefore, thus, also, moreover, furthermore
+- Before subordinating conjunctions when they introduce dependent clauses: as, when, while, since, because, although, if, unless, until, before, after
+- Before coordinating conjunctions joining independent clauses: and, but, or, so, yet, for, nor
+- Around non-restrictive clauses: which, who (when providing extra info)
+- After transitional expressions: in addition, for example, on the other hand
 
-B. BEFORE SUBORDINATING CONJUNCTIONS:
-- "environment as children" → MISSING COMMA → "environment, as children"
-- "time when people" → MISSING COMMA → "time, when people"
-- "situation since researchers" → MISSING COMMA → "situation, since researchers"
+B. CAPITALIZATION RULES:
+- First word of every sentence must be capitalized
+- Proper nouns must be capitalized (names of people, places, organizations)
+- Beginning of quoted speech must be capitalized
+- First word after colon when introducing complete sentence
 
-C. BEFORE COORDINATING CONJUNCTIONS (and, but, or, so):
-- "plate also now" → if "also" joins two clauses, needs comma before
-- "innate and it's also" → if joining two sentences, needs comma before "and"
+C. APOSTROPHE RULES:
+- Contractions: can't, won't, it's, they're, you're, we've, I'm
+- Possessives: child's, students', researcher's, children's
+- Its vs it's: "its" = possessive, "it's" = it is
 
-D. AROUND NON-ESSENTIAL CLAUSES:
-- "which shows that..." → needs comma before "which"
-- "who experienced..." → check if restrictive or non-restrictive
+D. ARTICLE RULES:
+- Use "a" before consonant sounds, "an" before vowel sounds
+- Use "the" for specific/previously mentioned items
+- Count nouns need articles: "researcher" should be "the researcher" or "a researcher"
 
-STEP 2: BE AS STRICT AS APEUNI:
-- Find EXACT missing comma positions  
-- Report EXACT words where comma is missing
-- Example: "Missing comma after 'also'" (just like APEUni does)
-- Give specific grammar rule explanations
+E. SUBJECT-VERB AGREEMENT:
+- Singular subjects need singular verbs: "data shows" → "data show" (data is plural)
+- Third person singular needs -s: "research indicate" → "research indicates"
+
+STEP 2: CHECK EVERY WORD SYSTEMATICALLY:
+- Scan each word for capitalization errors
+- Check every conjunction for comma placement
+- Verify every apostrophe and contraction
+- Confirm article usage throughout text
 
 FOR GRAMMAR SCORING (Ultra-strict - deduct 0.2 per error):
 - 2.0: PERFECT - Zero errors
@@ -301,28 +308,22 @@ Return your response in the following JSON format:
 3. Did I check EVERY "as", "when", "while", "since", "because" for missing commas?
 4. Am I being strict enough (like APEUni would be)?
 
-EXAMPLE 1 - MISSING COMMA AFTER "ALSO":
+EXAMPLE ERROR REPORTING FORMAT:
 {{
-    "scores": {{"grammar": 1.8, "vocabulary": 2.0}},
-    "feedback": {{"grammar": "The summary has a minor punctuation error with a missing comma, but it does not hinder communication. ERRORS: Missing comma after 'also'"}},
-    "grammar_errors": ["Missing comma after 'also'"],
-    "vocabulary_errors": [],
-    "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
+    "scores": {{"grammar": 1.8, "vocabulary": 2.0, "content": 2.0, "form": 1.0}},
+    "feedback": {{"grammar": "Grammar error detected: [specific error description]. ERRORS: [Exact error like 'Missing comma after word' or 'Capitalization error at start']"}},
+    "grammar_errors": ["[Specific error with exact word mentioned]"],
+    "vocabulary_errors": ["[Any spelling or word choice errors]"],
+    "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma: 1, Capitalization: 0, Apostrophe: 0, Articles: 0"}}
 }}
 
-EXAMPLE 2 - MISSING COMMA BEFORE "AS":
-{{
-    "scores": {{"grammar": 1.8, "vocabulary": 2.0}},
-    "feedback": {{"grammar": "Missing comma before subordinating conjunction. ERRORS: Missing comma before 'as children' - should be 'environment, as children'"}},
-    "grammar_errors": ["Missing comma before 'as children'"],
-    "vocabulary_errors": [],
-    "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
-}}
-
-⚠️ CRITICAL: Report comma errors EXACTLY like APEUni:
-- "Missing comma after 'word'" 
-- "Missing comma before 'word'"
-- Be specific about which word needs the comma
+⚠️ CRITICAL RULES FOR ERROR REPORTING:
+1. Be specific: "Missing comma after 'however'" not just "comma error"  
+2. Check capitalization: First word of sentence, proper nouns
+3. Check all contractions: don't, can't, it's vs its
+4. Check articles: a/an/the usage
+5. Check subject-verb agreement
+6. Report exact word where error occurs
 """
 
         # Step 3: Call GPT-4 API
