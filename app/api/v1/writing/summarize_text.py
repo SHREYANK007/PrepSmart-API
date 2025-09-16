@@ -79,24 +79,37 @@ SCORING CRITERIA (Total: 7 points):
 - Vocabulary (2 points): Appropriate word choice and range
 
 CRITICAL GRAMMAR RULES - DEDUCT POINTS FOR ANY VIOLATIONS:
-1. PUNCTUATION ERRORS:
-   - Missing commas before dependent clauses (e.g., "environment as children" should be "environment, as children")
+
+⚠️ MANDATORY COMMA RULES (DEDUCT 0.5 POINTS EACH):
+1. MISSING COMMA BEFORE DEPENDENT CLAUSES:
+   - "environment as children" → ERROR! Should be "environment, as children"  
+   - "time when people" → ERROR! Should be "time, when people"
+   - "situation where students" → ERROR! Should be "situation, where students"
+   - "way that researchers" → ERROR! Should be "way, that researchers"
+
+2. MISSING COMMA WITH SUBORDINATING CONJUNCTIONS:
+   - Words requiring commas: as, when, while, although, since, because, if, unless, until, before, after
+   - Example: "strongly influenced by environment as children" → MUST BE "strongly influenced by environment, as children"
+
+3. OTHER PUNCTUATION ERRORS:
    - Missing commas after introductory phrases
-   - Missing commas in compound sentences
-   - Incorrect use of semicolons, colons, apostrophes
-   
-2. SENTENCE STRUCTURE ERRORS:
+   - Missing commas in compound sentences (before and, but, or, so)
+   - Missing commas around non-essential clauses
+   - Incorrect apostrophes, semicolons, colons
+
+4. SENTENCE STRUCTURE ERRORS:
    - Run-on sentences without proper punctuation
    - Sentence fragments
-   - Misplaced modifiers
    - Subject-verb disagreement
-   
-3. SPECIFIC EXAMPLES TO CATCH:
-   - "environment as children" → MISSING COMMA → "environment, as children"
-   - Any clause starting with "as", "when", "while", "although" etc. needs proper comma placement
-   - Long sentences without appropriate comma breaks
 
-SCORE LIKE APEUNI - BE HARSH ON GRAMMAR MISTAKES!
+🔍 SPECIFIC TEST CASE:
+"The marshmallow test shows that a child's ability to delay gratification, once thought to be innate, is strongly influenced by environment as children who experienced reliable promises resisted longer than those previously deceived."
+
+ERRORS TO CATCH:
+- "environment as children" → MISSING COMMA → "environment, as children"
+- This is a MANDATORY comma error - DEDUCT 0.5 points minimum!
+
+SCORE LIKE APEUNI - BE EXTREMELY HARSH ON COMMA MISTAKES!
 
 QUESTION DETAILS:
 Title: {question_title}
@@ -116,16 +129,24 @@ Word Count: {word_count} words
 
 EVALUATION TASK:
 Please evaluate the user's summary and provide:
-1. Individual scores for each criterion (BE STRICT ON GRAMMAR - deduct 0.5 for each punctuation error)
+1. Individual scores for each criterion (BE EXTREMELY STRICT ON GRAMMAR - deduct 0.5 for each comma error)
 2. Specific feedback for each criterion with EXACT error locations
 3. Overall feedback and suggestions for improvement
 
+🚨 MANDATORY GRAMMAR CHECK:
+1. First, scan the text for "environment as children" pattern → If found, DEDUCT 0.5 points
+2. Check for ALL missing commas before subordinating conjunctions (as, when, while, etc.)
+3. Look for compound sentences missing commas before coordinating conjunctions
+4. Identify any run-on sentences or structural errors
+
 FOR GRAMMAR SCORING:
-- 2.0: Perfect grammar with no errors
-- 1.5: 1 minor punctuation error (missing comma, etc.)
-- 1.0: 2-3 grammar/punctuation errors
+- 2.0: Perfect grammar with ZERO errors
+- 1.5: 1 comma/punctuation error (like "environment as children")
+- 1.0: 2-3 grammar/punctuation errors  
 - 0.5: 4-5 errors
 - 0.0: 6+ errors or major structural problems
+
+⚠️ REMEMBER: "environment as children" = AUTOMATIC 0.5 point deduction!
 
 Return your response in the following JSON format:
 {{
@@ -142,10 +163,17 @@ Return your response in the following JSON format:
         "grammar": "DETAILED grammar feedback with EXACT error locations and corrections needed",
         "vocabulary": "Vocabulary usage feedback"
     }},
-    "grammar_errors": ["List each specific grammar/punctuation error with location"],
+    "grammar_errors": ["Missing comma before 'as children' - should be 'environment, as children'", "Any other specific errors"],
     "overall_feedback": "General assessment and improvement suggestions",
     "strengths": ["List of strengths"],
     "improvements": ["List of areas for improvement"]
+}}
+
+EXAMPLE FOR "environment as children" ERROR:
+{{
+    "scores": {{"grammar": 1.5}},
+    "feedback": {{"grammar": "Missing comma before subordinating conjunction. 'environment as children' should be 'environment, as children'"}},
+    "grammar_errors": ["Missing comma before 'as children' - should be 'environment, as children'"]
 }}
 """
 
