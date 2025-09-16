@@ -206,11 +206,27 @@ EVALUATION TASK - BE ULTRA-STRICT LIKE APEUNI:
    - Explain WHY it's wrong
    - Give specific rule that was violated
 
-🚨 MANDATORY CHECKS:
-1. "environment as children" → MUST catch this comma error
-2. Every single spelling mistake
-3. Every grammar rule violation
-4. Every punctuation error
+🚨 MANDATORY CHECKS - DO THESE EXACT STEPS:
+
+STEP 1: SEARCH FOR "environment as children" (without comma)
+- If found → AUTOMATIC 1.8/2.0 grammar score (missing comma error)
+- Must report: "Missing comma before 'as children' - should be 'environment, as children'"
+
+STEP 2: SEARCH EVERY SUBORDINATING CONJUNCTION:
+- Scan for: as, when, while, since, because, although, if, unless, until, before, after
+- Check if comma needed before each one
+- EVERY missing comma = 0.2 deduction
+
+STEP 3: SEARCH COORDINATING CONJUNCTIONS:
+- Scan for: and, but, or, so, yet, for, nor
+- If joining complete sentences → comma required
+- EVERY missing comma = 0.2 deduction  
+
+STEP 4: COUNT ALL ERRORS AND DEDUCT ACCORDINGLY:
+- 1 error = 1.8/2.0
+- 2 errors = 1.6/2.0  
+- 3 errors = 1.4/2.0
+- etc.
 
 FOR GRAMMAR SCORING (Ultra-strict - deduct 0.2 per error):
 - 2.0: PERFECT - Zero errors
@@ -271,14 +287,25 @@ Return your response in the following JSON format:
     "improvements": ["List EXACT areas for improvement with specific examples"]
 }}
 
+🔍 FINAL QUALITY CHECK - BEFORE RESPONDING:
+1. Did I search for "environment as children"? 
+2. If found, did I deduct points and report it as error?
+3. Did I check EVERY "as", "when", "while", "since", "because" for missing commas?
+4. Am I being strict enough (like APEUni would be)?
+
 MANDATORY EXAMPLE FOR "environment as children" ERROR:
 {{
-    "scores": {{"grammar": 1.7, "vocabulary": 2.0}},
-    "feedback": {{"grammar": "One comma error found at word position 15: Missing comma before subordinating conjunction 'as'. The phrase 'environment as children' should be 'environment, as children'. This violates the rule requiring commas before subordinating conjunctions in dependent clauses."}},
-    "grammar_errors": ["Position 15: Missing comma before 'as children' - should be 'environment, as children' (Rule: comma before subordinating conjunction)"],
+    "scores": {{"grammar": 1.8, "vocabulary": 2.0}},
+    "feedback": {{"grammar": "COMMA ERROR DETECTED: Missing comma before subordinating conjunction 'as'. The phrase 'environment as children' should be 'environment, as children'. This is a mandatory comma rule violation."}},
+    "grammar_errors": ["COMMA ERROR: 'environment as children' should be 'environment, as children' - missing comma before subordinating conjunction 'as'"],
     "vocabulary_errors": [],
     "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
 }}
+
+⚠️ REMEMBER: If you see "environment as children" anywhere in the text, you MUST:
+1. Give grammar score 1.8/2.0 (not 2.0)
+2. Report it in grammar_errors array
+3. Explain the comma rule violation in feedback
 """
 
         # Step 3: Call GPT-4 API
