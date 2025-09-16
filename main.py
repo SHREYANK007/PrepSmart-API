@@ -258,7 +258,9 @@ def get_scorer():
         try:
             from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer
             global_scorer = enhanced_hybrid_scorer
-            print("✅ Global enhanced scorer initialized")
+            # Trigger full initialization by accessing a property
+            _ = global_scorer.use_gpt  # This will initialize all layers including GPT
+            print("✅ Global enhanced scorer initialized with all layers")
         except ImportError:
             from app.services.scoring.hybrid_scorer import hybrid_scorer
             global_scorer = hybrid_scorer
