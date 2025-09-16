@@ -75,8 +75,28 @@ Act as a proficient Pearson PTE Academic AI scoring bot. You are tasked with sco
 SCORING CRITERIA (Total: 7 points):
 - Content (2 points): How well the key points from the passage are covered
 - Form (1 point): Single sentence between 5-75 words
-- Grammar (2 points): Grammatical correctness and sentence structure  
+- Grammar (2 points): Grammatical correctness and sentence structure - BE EXTREMELY STRICT
 - Vocabulary (2 points): Appropriate word choice and range
+
+CRITICAL GRAMMAR RULES - DEDUCT POINTS FOR ANY VIOLATIONS:
+1. PUNCTUATION ERRORS:
+   - Missing commas before dependent clauses (e.g., "environment as children" should be "environment, as children")
+   - Missing commas after introductory phrases
+   - Missing commas in compound sentences
+   - Incorrect use of semicolons, colons, apostrophes
+   
+2. SENTENCE STRUCTURE ERRORS:
+   - Run-on sentences without proper punctuation
+   - Sentence fragments
+   - Misplaced modifiers
+   - Subject-verb disagreement
+   
+3. SPECIFIC EXAMPLES TO CATCH:
+   - "environment as children" → MISSING COMMA → "environment, as children"
+   - Any clause starting with "as", "when", "while", "although" etc. needs proper comma placement
+   - Long sentences without appropriate comma breaks
+
+SCORE LIKE APEUNI - BE HARSH ON GRAMMAR MISTAKES!
 
 QUESTION DETAILS:
 Title: {question_title}
@@ -96,9 +116,16 @@ Word Count: {word_count} words
 
 EVALUATION TASK:
 Please evaluate the user's summary and provide:
-1. Individual scores for each criterion
-2. Specific feedback for each criterion
+1. Individual scores for each criterion (BE STRICT ON GRAMMAR - deduct 0.5 for each punctuation error)
+2. Specific feedback for each criterion with EXACT error locations
 3. Overall feedback and suggestions for improvement
+
+FOR GRAMMAR SCORING:
+- 2.0: Perfect grammar with no errors
+- 1.5: 1 minor punctuation error (missing comma, etc.)
+- 1.0: 2-3 grammar/punctuation errors
+- 0.5: 4-5 errors
+- 0.0: 6+ errors or major structural problems
 
 Return your response in the following JSON format:
 {{
@@ -112,9 +139,10 @@ Return your response in the following JSON format:
     "feedback": {{
         "content": "Specific feedback on content coverage",
         "form": "Feedback on form requirements",
-        "grammar": "Grammar feedback with examples if needed",
+        "grammar": "DETAILED grammar feedback with EXACT error locations and corrections needed",
         "vocabulary": "Vocabulary usage feedback"
     }},
+    "grammar_errors": ["List each specific grammar/punctuation error with location"],
     "overall_feedback": "General assessment and improvement suggestions",
     "strengths": ["List of strengths"],
     "improvements": ["List of areas for improvement"]
@@ -181,6 +209,7 @@ Return your response in the following JSON format:
             overall_feedback=scoring_result.get("overall_feedback", ""),
             strengths=scoring_result.get("strengths", []),
             improvements=scoring_result.get("improvements", []),
+            grammar_errors=scoring_result.get("grammar_errors", []),  # Add specific grammar errors
             word_count=word_count,
             processing_time=None,  # Will be calculated by middleware
             timestamp=datetime.utcnow().isoformat()
