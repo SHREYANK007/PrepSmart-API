@@ -279,9 +279,9 @@ Respond in JSON format:
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=300,
+                max_tokens=500,
                 temperature=0.3,
-                timeout=8  # 8 second timeout
+                timeout=30  # Allow 30 seconds for thorough analysis
             )
             
             import json
@@ -353,9 +353,9 @@ BE HARSH AND DETAILED. Find every tiny error."""
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
+                max_tokens=800,
                 temperature=0.1,
-                timeout=10  # 10 second timeout
+                timeout=35  # Allow 35 seconds for detailed verification
             )
             
             import json
