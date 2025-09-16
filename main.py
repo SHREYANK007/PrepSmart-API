@@ -248,6 +248,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Global scorer instance - initialize once to handle multiple requests
+global_scorer = None
+
+def get_scorer():
+    """Get global scorer instance, initialize if needed"""
+    global global_scorer
+    if global_scorer is None:
+        try:
+            from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer
+            global_scorer = enhanced_hybrid_scorer
+            print("✅ Global enhanced scorer initialized")
+        except ImportError:
+            from app.services.scoring.hybrid_scorer import hybrid_scorer
+            global_scorer = hybrid_scorer
+            print("✅ Global fallback scorer initialized")
+    return global_scorer
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://pte.prepsmart.au", "https://dashboard.prepsmart.au", "https://preppte.com", "http://pte.prepsmart.au", "http://dashboard.prepsmart.au", "http://82.29.167.191", "*"],
@@ -473,14 +490,8 @@ async def score_summarize_written_text(
         if not user_summary.strip():
             raise HTTPException(status_code=400, detail="User summary cannot be empty")
         
-        # Use Enhanced Hybrid Scoring instead of GPT-only
-        # Try enhanced version first, fallback to original if needed
-        try:
-            from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer as hybrid_scorer
-            print("DEBUG: Using ENHANCED hybrid scorer (3-layer system)")
-        except ImportError:
-            from app.services.scoring.hybrid_scorer import hybrid_scorer
-            print("DEBUG: Falling back to original hybrid scorer")
+        # Use global scorer instance
+        hybrid_scorer = get_scorer()
         
         print(f"DEBUG: About to call hybrid scorer with: '{user_summary}'")
         analysis = hybrid_scorer.comprehensive_score(

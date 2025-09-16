@@ -216,6 +216,10 @@ class HybridScorer:
         """Initialize GPT client for final verification"""
         logger.info("Initializing GPT Layer...")
         
+        # Ensure environment variables are loaded
+        from dotenv import load_dotenv
+        load_dotenv()
+        
         api_key = os.getenv('OPENAI_API_KEY')
         self.openai_client = None
         self.use_gpt = False
