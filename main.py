@@ -559,6 +559,8 @@ async def score_summarize_written_text(
             key_points_covered=analysis.get("key_points_covered", []),
             key_points_missed=analysis.get("key_points_missed", []),
             grammar_errors=analysis.get("grammar_errors", []),
+            vocabulary_errors=analysis.get("vocabulary_errors", []),
+            detailed_analysis=analysis.get("detailed_analysis", {}),
             vocabulary_assessment=analysis.get("vocabulary_justification", ""),
             improvements=analysis.get("priority_improvements", []),
             strengths=analysis.get("strengths", []),
