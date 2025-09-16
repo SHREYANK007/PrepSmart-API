@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from typing import Dict, List, Tuple
 import logging
-import openai
+from openai import OpenAI
 import os
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,9 @@ class HybridScorer:
             self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
             
             # GPT client for intelligent analysis
-            openai.api_key = os.getenv('OPENAI_API_KEY')
-            self.use_gpt = bool(openai.api_key)
+            api_key = os.getenv('OPENAI_API_KEY')
+            self.openai_client = OpenAI(api_key=api_key) if api_key else None
+            self.use_gpt = bool(api_key)
             
             logger.info(f"Hybrid scorer initialized successfully (GPT: {'enabled' if self.use_gpt else 'disabled'})")
         except Exception as e:
@@ -275,7 +276,7 @@ Respond in JSON format:
     }}
 }}"""
 
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=500,
@@ -348,7 +349,7 @@ Respond in JSON format:
 
 BE HARSH AND DETAILED. Find every tiny error."""
 
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=800,
