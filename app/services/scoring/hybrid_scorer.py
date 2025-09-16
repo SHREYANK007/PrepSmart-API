@@ -4,17 +4,11 @@ Combines grammar engines, spell checkers, and embeddings
 """
 
 import re
+import language_tool_python
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from typing import Dict, List, Tuple
 import logging
-
-# Try to import LanguageTool, fallback to regex if Java not available
-try:
-    import language_tool_python
-    LANGUAGETOOL_AVAILABLE = True
-except Exception:
-    LANGUAGETOOL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -22,18 +16,9 @@ class HybridScorer:
     def __init__(self):
         """Initialize all scoring engines"""
         try:
-            # Grammar checker (with fallback)
-            if LANGUAGETOOL_AVAILABLE:
-                try:
-                    self.grammar_tool = language_tool_python.LanguageTool('en-US')
-                    self.use_languagetool = True
-                    logger.info("LanguageTool initialized successfully")
-                except Exception as e:
-                    logger.warning(f"LanguageTool failed (Java required): {e}")
-                    self.use_languagetool = False
-            else:
-                self.use_languagetool = False
-                logger.info("LanguageTool not available, using regex fallback")
+            # Grammar checker (LanguageTool required)
+            self.grammar_tool = language_tool_python.LanguageTool('en-US')
+            logger.info("LanguageTool initialized successfully")
             
             # Sentence embeddings for content scoring
             self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -45,112 +30,56 @@ class HybridScorer:
     
     def score_grammar(self, text: str) -> Tuple[float, List[str]]:
         """
-        Grammar scoring using LanguageTool or regex fallback - APEUni level strictness
+        Grammar scoring using LanguageTool - APEUni level strictness
         Returns: (score out of 2.0, list of errors)
         """
         try:
-            if self.use_languagetool:
-                # Use LanguageTool for advanced grammar checking
-                matches = self.grammar_tool.check(text)
+            # Use LanguageTool for advanced grammar checking
+            matches = self.grammar_tool.check(text)
+            
+            # Categorize errors with different penalties (harsher like APEUni)
+            critical_errors = []  # -0.5 each
+            minor_errors = []     # -0.5 each (make all errors equal penalty)
+            tiny_errors = []      # -0.5 each
+            
+            for match in matches:
+                error_type = match.ruleId
+                error_msg = f"{match.message} at position {match.offset}"
                 
-                # Categorize errors with different penalties (harsher like APEUni)
-                critical_errors = []  # -0.5 each
-                minor_errors = []     # -0.5 each (make all errors equal penalty)
-                tiny_errors = []      # -0.5 each
-                
-                for match in matches:
-                    error_type = match.ruleId
-                    error_msg = f"{match.message} at position {match.offset}"
-                    
-                    # Critical grammar errors
-                    if any(x in error_type.lower() for x in ['subject_verb', 'agreement', 'tense']):
-                        critical_errors.append(error_msg)
-                    # Minor punctuation errors
-                    elif any(x in error_type.lower() for x in ['comma', 'punctuation', 'apostrophe']):
-                        minor_errors.append(error_msg)
-                    # Tiny errors
-                    else:
-                        tiny_errors.append(error_msg)
-                
-                # Calculate deductions (APEUni-style harsh penalties - 0.5 per error)
-                total_deduction = (
-                    len(critical_errors) * 0.5 +
-                    len(minor_errors) * 0.5 +
-                    len(tiny_errors) * 0.5
-                )
-                
-                # Cap at 2.0 maximum
-                grammar_score = max(0.0, 2.0 - total_deduction)
-                
-                # Format error messages like APEUni
-                all_errors = []
-                for err in critical_errors:
-                    all_errors.append(f"CRITICAL: {err}")
-                for err in minor_errors:
-                    all_errors.append(f"MINOR: {err}")
-                for err in tiny_errors:
-                    all_errors.append(f"TINY: {err}")
-                
-                return round(grammar_score, 1), all_errors
-            else:
-                # Fallback regex-based grammar checking
-                return self._regex_grammar_check(text)
+                # Critical grammar errors
+                if any(x in error_type.lower() for x in ['subject_verb', 'agreement', 'tense']):
+                    critical_errors.append(error_msg)
+                # Minor punctuation errors
+                elif any(x in error_type.lower() for x in ['comma', 'punctuation', 'apostrophe']):
+                    minor_errors.append(error_msg)
+                # Tiny errors
+                else:
+                    tiny_errors.append(error_msg)
+            
+            # Calculate deductions (APEUni-style harsh penalties - 0.5 per error)
+            total_deduction = (
+                len(critical_errors) * 0.5 +
+                len(minor_errors) * 0.5 +
+                len(tiny_errors) * 0.5
+            )
+            
+            # Cap at 2.0 maximum
+            grammar_score = max(0.0, 2.0 - total_deduction)
+            
+            # Format error messages like APEUni
+            all_errors = []
+            for err in critical_errors:
+                all_errors.append(f"CRITICAL: {err}")
+            for err in minor_errors:
+                all_errors.append(f"MINOR: {err}")
+            for err in tiny_errors:
+                all_errors.append(f"TINY: {err}")
+            
+            return round(grammar_score, 1), all_errors
             
         except Exception as e:
             logger.error(f"Grammar scoring failed: {e}")
             return 1.5, ["Grammar check unavailable"]
-    
-    def _regex_grammar_check(self, text: str) -> Tuple[float, List[str]]:
-        """
-        Fallback regex-based grammar checking for common errors
-        """
-        errors = []
-        total_deduction = 0.0
-        
-        # Check for common missing comma patterns
-        comma_patterns = [
-            (r'\b(however|therefore|moreover|furthermore|consequently|nevertheless|meanwhile)\s+[a-z]', 'Missing comma after transition word'),
-            (r'\b(also|too|as well)\s+[a-z]', 'Missing comma after "also/too/as well"'),
-            (r'\b(first|second|third|finally|lastly)\s+[a-z]', 'Missing comma after sequence word'),
-            (r'\b(for example|for instance|in fact|in addition|in contrast)\s+[a-z]', 'Missing comma after phrase'),
-        ]
-        
-        for pattern, message in comma_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
-                errors.append(f"MINOR: {message} at position {match.start()}")
-                total_deduction += 0.5
-        
-        # Check for basic subject-verb agreement issues
-        agreement_patterns = [
-            (r'\b(children|people|students)\s+is\b', 'Subject-verb disagreement: plural subject with singular verb'),
-            (r'\b(child|person|student)\s+are\b', 'Subject-verb disagreement: singular subject with plural verb'),
-        ]
-        
-        for pattern, message in agreement_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
-                errors.append(f"CRITICAL: {message} at position {match.start()}")
-                total_deduction += 0.5
-        
-        # Check for missing apostrophes
-        apostrophe_patterns = [
-            (r'\b(dont|doesnt|wont|cant|isnt|arent|wasnt|werent|havent|hasnt|shouldnt|wouldnt|couldnt)\b', 'Missing apostrophe in contraction'),
-        ]
-        
-        for pattern, message in apostrophe_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
-                errors.append(f"MINOR: {message} at position {match.start()}")
-                total_deduction += 0.5
-        
-        # Calculate final score
-        grammar_score = max(0.0, 2.0 - total_deduction)
-        
-        if not errors:
-            errors = ["Basic grammar check passed (install Java for advanced checking)"]
-        
-        return round(grammar_score, 1), errors
     
     def score_vocabulary(self, text: str, passage: str) -> Tuple[float, List[str]]:
         """
