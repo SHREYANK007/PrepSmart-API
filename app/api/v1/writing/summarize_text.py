@@ -78,38 +78,92 @@ SCORING CRITERIA (Total: 7 points):
 - Grammar (2 points): Grammatical correctness and sentence structure - BE EXTREMELY STRICT
 - Vocabulary (2 points): Appropriate word choice and range
 
-CRITICAL GRAMMAR RULES - DEDUCT POINTS FOR ANY VIOLATIONS:
+🚨 ULTRA-STRICT GRAMMAR RULES - DEDUCT FOR EVERY TINY ERROR:
 
-⚠️ MANDATORY COMMA RULES (DEDUCT 0.5 POINTS EACH):
+⚠️ MANDATORY COMMA RULES (DEDUCT 0.3 POINTS EACH):
 1. MISSING COMMA BEFORE DEPENDENT CLAUSES:
    - "environment as children" → ERROR! Should be "environment, as children"  
    - "time when people" → ERROR! Should be "time, when people"
    - "situation where students" → ERROR! Should be "situation, where students"
    - "way that researchers" → ERROR! Should be "way, that researchers"
+   - "data that shows" → ERROR! Should be "data, that shows"
 
 2. MISSING COMMA WITH SUBORDINATING CONJUNCTIONS:
-   - Words requiring commas: as, when, while, although, since, because, if, unless, until, before, after
-   - Example: "strongly influenced by environment as children" → MUST BE "strongly influenced by environment, as children"
+   - Words requiring commas: as, when, while, although, since, because, if, unless, until, before, after, where, that
+   - EVERY instance must have comma before these words
 
-3. OTHER PUNCTUATION ERRORS:
-   - Missing commas after introductory phrases
-   - Missing commas in compound sentences (before and, but, or, so)
-   - Missing commas around non-essential clauses
-   - Incorrect apostrophes, semicolons, colons
+3. MISSING COMMAS IN COMPOUND SENTENCES:
+   - Before: and, but, or, so, yet, for, nor
+   - "children resisted longer and those were deceived" → ERROR! Should be "children resisted longer, and those were deceived"
 
-4. SENTENCE STRUCTURE ERRORS:
-   - Run-on sentences without proper punctuation
-   - Sentence fragments
-   - Subject-verb disagreement
+4. MISSING APOSTROPHES:
+   - "childs" → ERROR! Should be "child's"  
+   - "its" vs "it's" errors
+   - "wont" → ERROR! Should be "won't"
+   - "cant" → ERROR! Should be "can't"
+
+5. ARTICLE ERRORS (DEDUCT 0.2 POINTS EACH):
+   - Missing "a", "an", "the" where required
+   - Wrong article usage (a/an confusion)
+   - "researcher found" → ERROR! Should be "the researcher found" or "a researcher found"
+
+6. SUBJECT-VERB AGREEMENT (DEDUCT 0.3 POINTS EACH):
+   - "data shows" → ERROR! Should be "data show" (data is plural)
+   - "research indicate" → ERROR! Should be "research indicates"
+   - Every disagreement must be caught
+
+7. PREPOSITION ERRORS (DEDUCT 0.2 POINTS EACH):
+   - "different than" → ERROR! Should be "different from"
+   - "impact on" vs "impact of" errors
+   - Wrong preposition usage
+
+8. TENSE CONSISTENCY (DEDUCT 0.3 POINTS EACH):
+   - Switching between past/present tense within sentence
+   - Must maintain consistent tense throughout
+
+🚨 ULTRA-STRICT VOCABULARY RULES - DEDUCT FOR EVERY ERROR:
+
+1. SPELLING ERRORS (DEDUCT 0.4 POINTS EACH):
+   - "recieve" → ERROR! Should be "receive"
+   - "seperate" → ERROR! Should be "separate"  
+   - "occured" → ERROR! Should be "occurred"
+   - "beleive" → ERROR! Should be "believe"
+   - "definately" → ERROR! Should be "definitely"
+   - EVERY misspelling must be caught and reported
+
+2. WORD CHOICE ERRORS (DEDUCT 0.3 POINTS EACH):
+   - "effect" vs "affect" misuse
+   - "then" vs "than" confusion
+   - "there", "their", "they're" errors
+   - "its" vs "it's" confusion
+   - "your" vs "you're" errors
+
+3. REDUNDANCY/REPETITION (DEDUCT 0.2 POINTS EACH):
+   - Repeating same words unnecessarily
+   - "various different" → ERROR! Just use "various" or "different"
+   - "each and every" → ERROR! Just use "each" or "every"
+
+4. INAPPROPRIATE REGISTER (DEDUCT 0.3 POINTS EACH):
+   - Informal words in academic writing
+   - "kids" → Should be "children"
+   - "stuff" → Should be "material" or "content"
+   - Contractions in formal writing
+
+5. COLLOCATION ERRORS (DEDUCT 0.3 POINTS EACH):
+   - "make a research" → ERROR! Should be "conduct research"
+   - "do a mistake" → ERROR! Should be "make a mistake"
+   - Wrong verb-noun combinations
 
 🔍 SPECIFIC TEST CASE:
 "The marshmallow test shows that a child's ability to delay gratification, once thought to be innate, is strongly influenced by environment as children who experienced reliable promises resisted longer than those previously deceived."
 
 ERRORS TO CATCH:
-- "environment as children" → MISSING COMMA → "environment, as children"
-- This is a MANDATORY comma error - DEDUCT 0.5 points minimum!
+- "environment as children" → MISSING COMMA → "environment, as children" (DEDUCT 0.3)
+- Check for ANY spelling mistakes
+- Check for word choice errors
+- Check for article usage
 
-SCORE LIKE APEUNI - BE EXTREMELY HARSH ON COMMA MISTAKES!
+SCORE LIKE APEUNI - BE ULTRA-HARSH ON EVERY TINY MISTAKE!
 
 QUESTION DETAILS:
 Title: {question_title}
@@ -127,26 +181,52 @@ USER'S SUMMARY:
 
 Word Count: {word_count} words
 
-EVALUATION TASK:
-Please evaluate the user's summary and provide:
-1. Individual scores for each criterion (BE EXTREMELY STRICT ON GRAMMAR - deduct 0.5 for each comma error)
-2. Specific feedback for each criterion with EXACT error locations
-3. Overall feedback and suggestions for improvement
+EVALUATION TASK - BE ULTRA-STRICT LIKE APEUNI:
+🔍 STEP-BY-STEP ANALYSIS REQUIRED:
 
-🚨 MANDATORY GRAMMAR CHECK:
-1. First, scan the text for "environment as children" pattern → If found, DEDUCT 0.5 points
-2. Check for ALL missing commas before subordinating conjunctions (as, when, while, etc.)
-3. Look for compound sentences missing commas before coordinating conjunctions
-4. Identify any run-on sentences or structural errors
+1. GRAMMAR ANALYSIS (Scan word by word):
+   a) Check EVERY comma placement - look for subordinating conjunctions (as, when, while, that, where, etc.)
+   b) Check EVERY apostrophe - contractions and possessives
+   c) Check EVERY article usage (a, an, the)
+   d) Check subject-verb agreement in EVERY sentence
+   e) Check preposition usage
+   f) Check tense consistency
 
-FOR GRAMMAR SCORING:
-- 2.0: Perfect grammar with ZERO errors
-- 1.5: 1 comma/punctuation error (like "environment as children")
-- 1.0: 2-3 grammar/punctuation errors  
-- 0.5: 4-5 errors
-- 0.0: 6+ errors or major structural problems
+2. VOCABULARY ANALYSIS (Check every word):
+   a) Scan for ANY spelling mistakes
+   b) Check word choice accuracy (effect/affect, then/than, etc.)
+   c) Look for redundancy and repetition
+   d) Check formality level
+   e) Verify collocation correctness
 
-⚠️ REMEMBER: "environment as children" = AUTOMATIC 0.5 point deduction!
+3. PROVIDE ULTRA-SPECIFIC FEEDBACK:
+   - Report EXACT word position where error occurs
+   - Show EXACT correction needed
+   - Explain WHY it's wrong
+   - Give specific rule that was violated
+
+🚨 MANDATORY CHECKS:
+1. "environment as children" → MUST catch this comma error
+2. Every single spelling mistake
+3. Every grammar rule violation
+4. Every punctuation error
+
+FOR GRAMMAR SCORING (Ultra-strict):
+- 2.0: PERFECT - Zero errors of any kind
+- 1.7: 1 minor error (missing comma)
+- 1.4: 2 errors 
+- 1.0: 3 errors
+- 0.7: 4 errors
+- 0.4: 5 errors
+- 0.0: 6+ errors
+
+FOR VOCABULARY SCORING (Ultra-strict):
+- 2.0: PERFECT - Zero spelling/word choice errors
+- 1.6: 1 minor error
+- 1.2: 2 errors
+- 0.8: 3 errors
+- 0.4: 4 errors
+- 0.0: 5+ errors
 
 Return your response in the following JSON format:
 {{
@@ -159,21 +239,35 @@ Return your response in the following JSON format:
     "total_score": 0-7,
     "feedback": {{
         "content": "Specific feedback on content coverage",
-        "form": "Feedback on form requirements",
-        "grammar": "DETAILED grammar feedback with EXACT error locations and corrections needed",
-        "vocabulary": "Vocabulary usage feedback"
+        "form": "Feedback on form requirements", 
+        "grammar": "ULTRA-DETAILED grammar feedback with EXACT word positions, specific corrections needed, and rules violated",
+        "vocabulary": "ULTRA-DETAILED vocabulary feedback with exact spelling errors, word choice mistakes, and specific corrections"
     }},
-    "grammar_errors": ["Missing comma before 'as children' - should be 'environment, as children'", "Any other specific errors"],
-    "overall_feedback": "General assessment and improvement suggestions",
-    "strengths": ["List of strengths"],
-    "improvements": ["List of areas for improvement"]
+    "grammar_errors": [
+        "Word position X: Missing comma before 'as children' - should be 'environment, as children' (Rule: comma before subordinating conjunction)",
+        "Word position Y: Missing apostrophe in 'childs' - should be 'child's' (Rule: possessive apostrophe)"
+    ],
+    "vocabulary_errors": [
+        "Word position X: Spelling error 'recieve' - should be 'receive' (Rule: i before e except after c)",
+        "Word position Y: Wrong word choice 'effect' - should be 'affect' (Rule: affect is verb, effect is noun)"
+    ],
+    "detailed_analysis": {{
+        "total_grammar_errors": 2,
+        "total_vocabulary_errors": 1,
+        "error_breakdown": "Comma errors: 1, Spelling errors: 1, Word choice: 0"
+    }},
+    "overall_feedback": "COMPREHENSIVE assessment with improvement suggestions",
+    "strengths": ["List specific strengths found"],
+    "improvements": ["List EXACT areas for improvement with specific examples"]
 }}
 
-EXAMPLE FOR "environment as children" ERROR:
+MANDATORY EXAMPLE FOR "environment as children" ERROR:
 {{
-    "scores": {{"grammar": 1.5}},
-    "feedback": {{"grammar": "Missing comma before subordinating conjunction. 'environment as children' should be 'environment, as children'"}},
-    "grammar_errors": ["Missing comma before 'as children' - should be 'environment, as children'"]
+    "scores": {{"grammar": 1.7, "vocabulary": 2.0}},
+    "feedback": {{"grammar": "One comma error found at word position 15: Missing comma before subordinating conjunction 'as'. The phrase 'environment as children' should be 'environment, as children'. This violates the rule requiring commas before subordinating conjunctions in dependent clauses."}},
+    "grammar_errors": ["Position 15: Missing comma before 'as children' - should be 'environment, as children' (Rule: comma before subordinating conjunction)"],
+    "vocabulary_errors": [],
+    "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
 }}
 """
 
@@ -237,7 +331,9 @@ EXAMPLE FOR "environment as children" ERROR:
             overall_feedback=scoring_result.get("overall_feedback", ""),
             strengths=scoring_result.get("strengths", []),
             improvements=scoring_result.get("improvements", []),
-            grammar_errors=scoring_result.get("grammar_errors", []),  # Add specific grammar errors
+            grammar_errors=scoring_result.get("grammar_errors", []),  # Specific grammar errors with positions
+            vocabulary_errors=scoring_result.get("vocabulary_errors", []),  # Specific vocabulary errors
+            detailed_analysis=scoring_result.get("detailed_analysis", {}),  # Error breakdown
             word_count=word_count,
             processing_time=None,  # Will be calculated by middleware
             timestamp=datetime.utcnow().isoformat()

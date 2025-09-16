@@ -274,6 +274,8 @@ class SummarizeTextResponse(BaseModel):
     key_points_covered: List[str]
     key_points_missed: List[str]
     grammar_errors: List[str]
+    vocabulary_errors: List[str]  # Add specific vocabulary errors
+    detailed_analysis: Dict = {}  # Add error breakdown analysis
     vocabulary_assessment: str
     improvements: List[str]
     strengths: List[str]
