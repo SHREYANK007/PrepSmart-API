@@ -279,8 +279,9 @@ Respond in JSON format:
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=500,
-                temperature=0.3
+                max_tokens=300,
+                temperature=0.3,
+                timeout=8  # 8 second timeout
             )
             
             import json
@@ -352,8 +353,9 @@ BE HARSH AND DETAILED. Find every tiny error."""
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=800,
-                temperature=0.1
+                max_tokens=400,
+                temperature=0.1,
+                timeout=10  # 10 second timeout
             )
             
             import json
@@ -434,9 +436,13 @@ BE HARSH AND DETAILED. Find every tiny error."""
                 }
             }
             
-            # STEP 2: GPT-4O VERIFICATION & DETAILED ANALYSIS
+            # STEP 2: GPT-4O VERIFICATION & DETAILED ANALYSIS (with timeout protection)
             print("DEBUG: STEP 2 - GPT-4o verification and detailed analysis")
-            gpt_verification = self.gpt_double_check_analysis(user_summary, passage, all_potential_issues)
+            try:
+                gpt_verification = self.gpt_double_check_analysis(user_summary, passage, all_potential_issues)
+            except Exception as e:
+                print(f"DEBUG: GPT step failed with error: {e}")
+                gpt_verification = {"success": False, "reason": f"Timeout or error: {str(e)}"}
             
             if gpt_verification.get("success"):
                 print("DEBUG: GPT verification successful - applying verified scores")
@@ -466,9 +472,16 @@ BE HARSH AND DETAILED. Find every tiny error."""
                 
             else:
                 print(f"DEBUG: GPT verification failed: {gpt_verification.get('reason', 'Unknown')}")
-                print("DEBUG: Using rule-based scores only")
-                strengths = []
-                improvements = []
+                print("DEBUG: Using rule-based scores with stricter deductions")
+                
+                # Apply stricter rule-based scoring when GPT fails
+                if len(grammar_errors) > 0:
+                    grammar_score = max(0.0, 2.0 - (len(grammar_errors) * 0.5))
+                if len(vocab_errors) > 0:
+                    vocab_score = max(0.0, 2.0 - (len(vocab_errors) * 0.5))
+                    
+                strengths = ["Grammar analysis completed", "Vocabulary check completed"] if grammar_score >= 1.5 and vocab_score >= 1.5 else []
+                improvements = ["Review grammar rules", "Check spelling and word choice"] if grammar_score < 1.5 or vocab_score < 1.5 else []
             
             # Calculate total with enhanced scores
             total_score = grammar_score + vocab_score + content_score + form_score
