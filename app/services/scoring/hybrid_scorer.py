@@ -163,25 +163,50 @@ class HybridScorer:
             print(f"DEBUG Content: key_similarity = {key_similarity:.3f}")
             print(f"DEBUG Content: passage_similarity = {passage_similarity:.3f}")
             
-            # Weighted content score (Pearson-style)
-            if key_similarity > 0.8 and passage_similarity > 0.7:
-                content_score = 2.0
-                feedback = ["Excellent coverage of key points"]
-            elif key_similarity > 0.7 and passage_similarity > 0.6:
-                content_score = 1.8
-                feedback = ["Good coverage with minor gaps"]
-            elif key_similarity > 0.6 and passage_similarity > 0.5:
-                content_score = 1.5
-                feedback = ["Adequate coverage, missing some key points"]
-            elif key_similarity > 0.5 and passage_similarity > 0.4:
-                content_score = 1.2
-                feedback = ["Basic coverage, several key points missing"]
-            elif key_similarity > 0.4:
-                content_score = 1.0
-                feedback = ["Limited coverage of main ideas"]
+            # Check if key_points is just placeholder text
+            is_placeholder_keypoints = key_points.lower().startswith("main ideas") or len(key_points) < 50
+            
+            if is_placeholder_keypoints:
+                print("DEBUG: Detected placeholder key_points, using passage similarity only")
+                # Use passage similarity only when key_points are placeholder
+                if passage_similarity > 0.8:
+                    content_score = 2.0
+                    feedback = ["Excellent understanding of passage content"]
+                elif passage_similarity > 0.7:
+                    content_score = 1.8
+                    feedback = ["Very good understanding with minor gaps"]
+                elif passage_similarity > 0.6:
+                    content_score = 1.5
+                    feedback = ["Good understanding, some details missing"]
+                elif passage_similarity > 0.5:
+                    content_score = 1.2
+                    feedback = ["Basic understanding of main concepts"]
+                elif passage_similarity > 0.4:
+                    content_score = 1.0
+                    feedback = ["Limited understanding of passage"]
+                else:
+                    content_score = 0.5
+                    feedback = ["Poor understanding of passage content"]
             else:
-                content_score = 0.5
-                feedback = ["Poor understanding of passage content"]
+                # Original logic when key_points are real
+                if key_similarity > 0.8 and passage_similarity > 0.7:
+                    content_score = 2.0
+                    feedback = ["Excellent coverage of key points"]
+                elif key_similarity > 0.7 and passage_similarity > 0.6:
+                    content_score = 1.8
+                    feedback = ["Good coverage with minor gaps"]
+                elif key_similarity > 0.6 and passage_similarity > 0.5:
+                    content_score = 1.5
+                    feedback = ["Adequate coverage, missing some key points"]
+                elif key_similarity > 0.5 and passage_similarity > 0.4:
+                    content_score = 1.2
+                    feedback = ["Basic coverage, several key points missing"]
+                elif key_similarity > 0.4:
+                    content_score = 1.0
+                    feedback = ["Limited coverage of main ideas"]
+                else:
+                    content_score = 0.5
+                    feedback = ["Poor understanding of passage content"]
             
             # Add specific feedback
             if key_similarity < 0.7:
