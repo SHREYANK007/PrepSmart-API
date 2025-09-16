@@ -11,6 +11,7 @@ from datetime import datetime
 
 from app.models.writing_models import SummarizeTextRequest, SummarizeTextResponse
 from app.services.scoring.gpt_service import GPTService
+from app.services.scoring.hybrid_scorer import hybrid_scorer
 from app.services.wordpress.wp_client import WordPressClient
 from app.core.dependencies import get_current_user
 
@@ -68,7 +69,52 @@ async def score_summarize_written_text(
         if word_count is None:
             word_count = len(user_summary.split())
         
-        # Step 2: Create GPT prompt
+        # Step 2: Use Hybrid Scoring (Rule-based + ML) instead of GPT-only
+        logger.info("Using hybrid scoring system for Pearson-level accuracy...")
+        
+        try:
+            # Get comprehensive hybrid scores
+            hybrid_result = hybrid_scorer.comprehensive_score(
+                user_summary=user_summary,
+                passage=reading_passage,
+                key_points=key_points
+            )
+            
+            if not hybrid_result.get("success"):
+                raise Exception(f"Hybrid scoring failed: {hybrid_result.get('error')}")
+            
+            # Extract scores and feedback
+            total_score = hybrid_result["total_score"]
+            percentage = hybrid_result["percentage"]
+            band = hybrid_result["band"]
+            
+            # Prepare response
+            response = SummarizeTextResponse(
+                success=True,
+                scores=hybrid_result["scores"],
+                total_score=total_score,
+                percentage=percentage,
+                grade=band,
+                feedback=hybrid_result["feedback"],
+                overall_feedback=f"Hybrid Analysis Complete. Total: {total_score}/7 ({percentage}%)",
+                strengths=["Accurate rule-based analysis", "Pearson-level strictness"],
+                improvements=hybrid_result["content_feedback"] + hybrid_result["form_feedback"],
+                grammar_errors=hybrid_result["grammar_errors"],
+                vocabulary_errors=hybrid_result["vocabulary_errors"],
+                detailed_analysis=hybrid_result["detailed_analysis"],
+                word_count=word_count,
+                processing_time=None,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            
+            logger.info(f"Hybrid scoring successful: {total_score}/7 ({band})")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Hybrid scoring failed, falling back to GPT: {e}")
+            # Fall back to original GPT method if hybrid fails
+        
+        # Step 3: FALLBACK - Original GPT scoring method
         gpt_prompt = f"""
 🚨 ULTRA-PEDANTIC GRAMMAR EXAMINER 🚨
 
