@@ -9,6 +9,8 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from typing import Dict, List, Tuple
 import logging
+import openai
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,11 @@ class HybridScorer:
             # Sentence embeddings for content scoring
             self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
             
-            logger.info("Hybrid scorer initialized successfully")
+            # GPT client for intelligent analysis
+            openai.api_key = os.getenv('OPENAI_API_KEY')
+            self.use_gpt = bool(openai.api_key)
+            
+            logger.info(f"Hybrid scorer initialized successfully (GPT: {'enabled' if self.use_gpt else 'disabled'})")
         except Exception as e:
             logger.error(f"Failed to initialize hybrid scorer: {e}")
             raise
@@ -220,6 +226,71 @@ class HybridScorer:
             logger.error(f"Content scoring failed: {e}")
             return 1.5, ["Content analysis unavailable"]
     
+    def gpt_enhanced_analysis(self, user_summary: str, passage: str, key_points: str) -> Dict:
+        """
+        GPT-powered intelligent analysis for content depth and vocabulary sophistication
+        """
+        if not self.use_gpt:
+            return {"success": False, "reason": "GPT not available"}
+            
+        try:
+            prompt = f"""You are an expert PTE scorer analyzing a 'Summarize Written Text' response with APEUni-level strictness.
+
+PASSAGE (original text):
+{passage[:500]}...
+
+USER SUMMARY:
+{user_summary}
+
+Analyze this summary for:
+
+1. CONTENT ACCURACY & COMPLETENESS:
+   - Does it capture the main idea accurately?
+   - Are key details included?
+   - Any factual errors or misinterpretations?
+   
+2. VOCABULARY SOPHISTICATION:
+   - Word choice appropriateness
+   - Academic vocabulary usage
+   - Any informal/inappropriate words
+   - Redundancy or repetition issues
+
+3. COHERENCE & FLOW:
+   - Logical organization
+   - Smooth transitions
+   - Clear relationships between ideas
+
+Provide scores out of 2.0 for each category and specific actionable feedback.
+
+Respond in JSON format:
+{{
+    "content_accuracy": 1.8,
+    "vocabulary_quality": 1.9,
+    "coherence": 1.7,
+    "detailed_feedback": {{
+        "strengths": ["strength1", "strength2"],
+        "improvements": ["improvement1", "improvement2"],
+        "vocabulary_issues": ["issue1", "issue2"],
+        "content_gaps": ["gap1", "gap2"]
+    }}
+}}"""
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=500,
+                temperature=0.3
+            )
+            
+            import json
+            result = json.loads(response.choices[0].message.content)
+            result["success"] = True
+            return result
+            
+        except Exception as e:
+            logger.error(f"GPT analysis failed: {e}")
+            return {"success": False, "reason": str(e)}
+    
     def score_form(self, text: str) -> Tuple[float, List[str]]:
         """
         Form scoring: strict regex validation (not GPT guessing)
@@ -258,17 +329,51 @@ class HybridScorer:
     
     def comprehensive_score(self, user_summary: str, passage: str, key_points: str) -> Dict:
         """
-        Complete hybrid scoring - combines all engines
-        Returns full scoring breakdown like APEUni
+        Complete hybrid scoring - combines rule-based engines + GPT intelligence
+        Returns full scoring breakdown like APEUni with enhanced GPT insights
         """
         try:
-            # Individual component scoring
+            print("DEBUG: Starting comprehensive hybrid scoring (Rule-based + GPT)")
+            
+            # RULE-BASED SCORING (Foundation)
             grammar_score, grammar_errors = self.score_grammar(user_summary)
             vocab_score, vocab_errors = self.score_vocabulary(user_summary, passage)
             content_score, content_feedback = self.score_content(user_summary, key_points, passage)
             form_score, form_feedback = self.score_form(user_summary)
             
-            # Calculate total
+            print(f"DEBUG: Rule-based scores - G:{grammar_score}, V:{vocab_score}, C:{content_score}, F:{form_score}")
+            
+            # GPT INTELLIGENCE ENHANCEMENT
+            gpt_analysis = self.gpt_enhanced_analysis(user_summary, passage, key_points)
+            
+            if gpt_analysis.get("success"):
+                print("DEBUG: GPT analysis successful, enhancing scores")
+                # Blend GPT insights with rule-based scores
+                gpt_content = gpt_analysis.get("content_accuracy", content_score)
+                gpt_vocab = gpt_analysis.get("vocabulary_quality", vocab_score)
+                
+                # Weighted combination: 70% rule-based + 30% GPT intelligence
+                enhanced_content = (content_score * 0.7) + (gpt_content * 0.3)
+                enhanced_vocab = (vocab_score * 0.7) + (gpt_vocab * 0.3)
+                
+                # Use enhanced scores
+                content_score = round(min(2.0, enhanced_content), 1)
+                vocab_score = round(min(2.0, enhanced_vocab), 1)
+                
+                # Add GPT insights to feedback
+                gpt_feedback = gpt_analysis.get("detailed_feedback", {})
+                strengths = gpt_feedback.get("strengths", [])
+                improvements = gpt_feedback.get("improvements", [])
+                vocab_issues = gpt_feedback.get("vocabulary_issues", [])
+                
+                print(f"DEBUG: Enhanced scores with GPT - C:{content_score}, V:{vocab_score}")
+            else:
+                print(f"DEBUG: GPT analysis failed: {gpt_analysis.get('reason', 'Unknown')}")
+                strengths = []
+                improvements = []
+                vocab_issues = []
+            
+            # Calculate total with enhanced scores
             total_score = grammar_score + vocab_score + content_score + form_score
             percentage = round((total_score / 7) * 100)
             
@@ -304,14 +409,17 @@ class HybridScorer:
                     "total_vocabulary_errors": len(vocab_errors),
                     "error_breakdown": f"Grammar: {len(grammar_errors)}, Vocabulary: {len(vocab_errors)}, Content gaps: {2.0 - content_score}, Form issues: {1.0 - form_score}"
                 },
-                # Add fields that main.py expects
+                # Enhanced fields with GPT insights
                 "grammar_justification": f"Grammar score: {grammar_score}/2.0. " + ("; ".join(grammar_errors[:3]) if grammar_errors else "No grammar errors found"),
-                "vocabulary_justification": f"Vocabulary score: {vocab_score}/2.0. " + ("; ".join(vocab_errors[:3]) if vocab_errors else "No vocabulary errors found"),
+                "vocabulary_justification": f"Vocabulary score: {vocab_score}/2.0. " + ("; ".join(vocab_errors[:3]) if vocab_errors else "No vocabulary errors found") + (f" GPT insights: {'; '.join(vocab_issues[:2])}" if vocab_issues else ""),
                 "content_justification": f"Content score: {content_score}/2.0. " + ("; ".join(content_feedback[:2]) if content_feedback else "Good content coverage"),
                 "form_justification": f"Form score: {form_score}/1.0. " + ("; ".join(form_feedback) if form_feedback else "Perfect form"),
+                "strengths": strengths,
+                "ai_recommendations": improvements,
+                "gpt_analysis": gpt_analysis if gpt_analysis.get("success") else None,
                 "feedback": {
                     "grammar": f"Grammar score: {grammar_score}/2.0. " + "; ".join(grammar_errors[:3]),
-                    "vocabulary": f"Vocabulary score: {vocab_score}/2.0. " + "; ".join(vocab_errors[:3]),
+                    "vocabulary": f"Vocabulary score: {vocab_score}/2.0. " + "; ".join(vocab_errors[:3]) + (f" | GPT: {'; '.join(vocab_issues[:1])}" if vocab_issues else ""),
                     "content": f"Content score: {content_score}/2.0. " + "; ".join(content_feedback[:2]),
                     "form": f"Form score: {form_score}/1.0. " + "; ".join(form_feedback)
                 }
