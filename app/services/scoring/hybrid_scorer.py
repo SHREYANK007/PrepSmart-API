@@ -30,10 +30,40 @@ class HybridScorer:
             self.openai_client = OpenAI(api_key=api_key) if api_key else None
             self.use_gpt = bool(api_key)
             
+            # Cost tracking
+            self.total_api_cost = 0.0
+            
             logger.info(f"Hybrid scorer initialized successfully (GPT: {'enabled' if self.use_gpt else 'disabled'})")
         except Exception as e:
             logger.error(f"Failed to initialize hybrid scorer: {e}")
             raise
+    
+    def calculate_openai_cost(self, usage_data, model="gpt-4o"):
+        """
+        Calculate OpenAI API cost based on token usage
+        GPT-4o pricing (as of 2024): $5/1M input tokens, $15/1M output tokens
+        """
+        if not usage_data:
+            return 0.0
+            
+        input_tokens = usage_data.prompt_tokens
+        output_tokens = usage_data.completion_tokens
+        
+        # GPT-4o pricing per 1000 tokens
+        if model == "gpt-4o":
+            input_cost_per_1k = 0.005  # $5 per 1M tokens = $0.005 per 1K
+            output_cost_per_1k = 0.015  # $15 per 1M tokens = $0.015 per 1K
+        else:
+            # Default GPT-4 pricing
+            input_cost_per_1k = 0.03
+            output_cost_per_1k = 0.06
+            
+        input_cost = (input_tokens / 1000) * input_cost_per_1k
+        output_cost = (output_tokens / 1000) * output_cost_per_1k
+        total_cost = input_cost + output_cost
+        
+        print(f"💰 API COST: {input_tokens} input + {output_tokens} output tokens = ${total_cost:.4f}")
+        return total_cost
     
     def score_grammar(self, text: str) -> Tuple[float, List[str]]:
         """
@@ -284,6 +314,11 @@ Respond in JSON format:
                 timeout=30  # Allow 30 seconds for thorough analysis
             )
             
+            # Calculate and track API cost
+            if hasattr(response, 'usage'):
+                cost = self.calculate_openai_cost(response.usage, "gpt-4o")
+                self.total_api_cost += cost
+            
             import json
             result = json.loads(response.choices[0].message.content)
             result["success"] = True
@@ -357,6 +392,11 @@ BE HARSH AND DETAILED. Find every tiny error."""
                 temperature=0.1,
                 timeout=35  # Allow 35 seconds for detailed verification
             )
+            
+            # Calculate and track API cost
+            if hasattr(response, 'usage'):
+                cost = self.calculate_openai_cost(response.usage, "gpt-4o")
+                self.total_api_cost += cost
             
             import json
             result = json.loads(response.choices[0].message.content)
@@ -499,6 +539,13 @@ BE HARSH AND DETAILED. Find every tiny error."""
             else:
                 band = "Needs Improvement"
             
+            # Display total API cost for this scoring task
+            print(f"🔥 TOTAL API COST FOR THIS TASK: ${self.total_api_cost:.4f}")
+            
+            # Reset cost tracker for next task
+            task_cost = self.total_api_cost
+            self.total_api_cost = 0.0
+            
             return {
                 "success": True,
                 "scores": {
@@ -521,15 +568,15 @@ BE HARSH AND DETAILED. Find every tiny error."""
                 },
                 # Enhanced fields with GPT insights
                 "grammar_justification": f"Grammar score: {grammar_score}/2.0. " + ("; ".join(grammar_errors[:3]) if grammar_errors else "No grammar errors found"),
-                "vocabulary_justification": f"Vocabulary score: {vocab_score}/2.0. " + ("; ".join(vocab_errors[:3]) if vocab_errors else "No vocabulary errors found") + (f" GPT insights: {'; '.join(vocab_issues[:2])}" if vocab_issues else ""),
+                "vocabulary_justification": f"Vocabulary score: {vocab_score}/2.0. " + ("; ".join(vocab_errors[:3]) if vocab_errors else "No vocabulary errors found"),
                 "content_justification": f"Content score: {content_score}/2.0. " + ("; ".join(content_feedback[:2]) if content_feedback else "Good content coverage"),
                 "form_justification": f"Form score: {form_score}/1.0. " + ("; ".join(form_feedback) if form_feedback else "Perfect form"),
                 "strengths": strengths,
                 "ai_recommendations": improvements,
-                "gpt_analysis": gpt_analysis if gpt_analysis.get("success") else None,
+                "api_cost": task_cost,
                 "feedback": {
                     "grammar": f"Grammar score: {grammar_score}/2.0. " + "; ".join(grammar_errors[:3]),
-                    "vocabulary": f"Vocabulary score: {vocab_score}/2.0. " + "; ".join(vocab_errors[:3]) + (f" | GPT: {'; '.join(vocab_issues[:1])}" if vocab_issues else ""),
+                    "vocabulary": f"Vocabulary score: {vocab_score}/2.0. " + "; ".join(vocab_errors[:3]),
                     "content": f"Content score: {content_score}/2.0. " + "; ".join(content_feedback[:2]),
                     "form": f"Form score: {form_score}/1.0. " + "; ".join(form_feedback)
                 }
