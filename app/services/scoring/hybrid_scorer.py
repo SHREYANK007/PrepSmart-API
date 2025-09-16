@@ -147,6 +147,10 @@ class HybridScorer:
         Returns: (score out of 2.0, coverage details)
         """
         try:
+            print(f"DEBUG Content: user_summary length: {len(user_summary)}")
+            print(f"DEBUG Content: key_points: '{key_points[:100]}...' (length: {len(key_points)})")
+            print(f"DEBUG Content: passage length: {len(passage)}")
+            
             # Generate embeddings
             user_emb = self.sentence_model.encode(user_summary, convert_to_tensor=True)
             key_emb = self.sentence_model.encode(key_points, convert_to_tensor=True)
@@ -155,6 +159,9 @@ class HybridScorer:
             # Calculate similarities
             key_similarity = util.pytorch_cos_sim(user_emb, key_emb).item()
             passage_similarity = util.pytorch_cos_sim(user_emb, passage_emb).item()
+            
+            print(f"DEBUG Content: key_similarity = {key_similarity:.3f}")
+            print(f"DEBUG Content: passage_similarity = {passage_similarity:.3f}")
             
             # Weighted content score (Pearson-style)
             if key_similarity > 0.8 and passage_similarity > 0.7:
