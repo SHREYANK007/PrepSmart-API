@@ -16,16 +16,16 @@ class HybridScorer:
     def __init__(self):
         """Initialize all scoring engines"""
         try:
-            # Grammar checker (LanguageTool required) - specify path to manually downloaded version
+            # Grammar checker (LanguageTool required) - use environment variable to specify path
             import os
             languagetool_path = os.path.expanduser('~/.cache/language_tool_python/LanguageTool-6.3')
             if os.path.exists(languagetool_path):
-                self.grammar_tool = language_tool_python.LanguageTool('en-US', tool_path=languagetool_path)
-                logger.info(f"LanguageTool initialized with manual path: {languagetool_path}")
-            else:
-                # Fallback to automatic download
-                self.grammar_tool = language_tool_python.LanguageTool('en-US')
-                logger.info("LanguageTool initialized with automatic download")
+                # Set environment variable to point to our manual installation
+                os.environ['LANGUAGETOOL_PATH'] = languagetool_path
+                logger.info(f"Set LANGUAGETOOL_PATH to: {languagetool_path}")
+            
+            self.grammar_tool = language_tool_python.LanguageTool('en-US')
+            logger.info("LanguageTool initialized successfully")
             
             # Sentence embeddings for content scoring
             self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
