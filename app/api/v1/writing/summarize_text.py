@@ -208,25 +208,33 @@ EVALUATION TASK - BE ULTRA-STRICT LIKE APEUNI:
 
 🚨 MANDATORY CHECKS - DO THESE EXACT STEPS:
 
-STEP 1: SEARCH FOR "environment as children" (without comma)
-- If found → AUTOMATIC 1.8/2.0 grammar score (missing comma error)
-- Must report: "Missing comma before 'as children' - should be 'environment, as children'"
+STEP 1: CHECK EVERY SINGLE COMMA POSITION (like APEUni):
 
-STEP 2: SEARCH EVERY SUBORDINATING CONJUNCTION:
-- Scan for: as, when, while, since, because, although, if, unless, until, before, after
-- Check if comma needed before each one
-- EVERY missing comma = 0.2 deduction
+A. AFTER INTRODUCTORY PHRASES:
+- "on a plate" → needs comma after if followed by new clause
+- "also" → needs comma after if it starts a new thought
+- "thus" → needs comma after
+- "however" → needs comma after
+- "therefore" → needs comma after
 
-STEP 3: SEARCH COORDINATING CONJUNCTIONS:
-- Scan for: and, but, or, so, yet, for, nor
-- If joining complete sentences → comma required
-- EVERY missing comma = 0.2 deduction  
+B. BEFORE SUBORDINATING CONJUNCTIONS:
+- "environment as children" → MISSING COMMA → "environment, as children"
+- "time when people" → MISSING COMMA → "time, when people"
+- "situation since researchers" → MISSING COMMA → "situation, since researchers"
 
-STEP 4: COUNT ALL ERRORS AND DEDUCT ACCORDINGLY:
-- 1 error = 1.8/2.0
-- 2 errors = 1.6/2.0  
-- 3 errors = 1.4/2.0
-- etc.
+C. BEFORE COORDINATING CONJUNCTIONS (and, but, or, so):
+- "plate also now" → if "also" joins two clauses, needs comma before
+- "innate and it's also" → if joining two sentences, needs comma before "and"
+
+D. AROUND NON-ESSENTIAL CLAUSES:
+- "which shows that..." → needs comma before "which"
+- "who experienced..." → check if restrictive or non-restrictive
+
+STEP 2: BE AS STRICT AS APEUNI:
+- Find EXACT missing comma positions  
+- Report EXACT words where comma is missing
+- Example: "Missing comma after 'also'" (just like APEUni does)
+- Give specific grammar rule explanations
 
 FOR GRAMMAR SCORING (Ultra-strict - deduct 0.2 per error):
 - 2.0: PERFECT - Zero errors
@@ -293,19 +301,28 @@ Return your response in the following JSON format:
 3. Did I check EVERY "as", "when", "while", "since", "because" for missing commas?
 4. Am I being strict enough (like APEUni would be)?
 
-MANDATORY EXAMPLE FOR "environment as children" ERROR:
+EXAMPLE 1 - MISSING COMMA AFTER "ALSO":
 {{
     "scores": {{"grammar": 1.8, "vocabulary": 2.0}},
-    "feedback": {{"grammar": "COMMA ERROR DETECTED: Missing comma before subordinating conjunction 'as'. The phrase 'environment as children' should be 'environment, as children'. This is a mandatory comma rule violation."}},
-    "grammar_errors": ["COMMA ERROR: 'environment as children' should be 'environment, as children' - missing comma before subordinating conjunction 'as'"],
+    "feedback": {{"grammar": "The summary has a minor punctuation error with a missing comma, but it does not hinder communication. ERRORS: Missing comma after 'also'"}},
+    "grammar_errors": ["Missing comma after 'also'"],
     "vocabulary_errors": [],
     "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
 }}
 
-⚠️ REMEMBER: If you see "environment as children" anywhere in the text, you MUST:
-1. Give grammar score 1.8/2.0 (not 2.0)
-2. Report it in grammar_errors array
-3. Explain the comma rule violation in feedback
+EXAMPLE 2 - MISSING COMMA BEFORE "AS":
+{{
+    "scores": {{"grammar": 1.8, "vocabulary": 2.0}},
+    "feedback": {{"grammar": "Missing comma before subordinating conjunction. ERRORS: Missing comma before 'as children' - should be 'environment, as children'"}},
+    "grammar_errors": ["Missing comma before 'as children'"],
+    "vocabulary_errors": [],
+    "detailed_analysis": {{"total_grammar_errors": 1, "total_vocabulary_errors": 0, "error_breakdown": "Comma errors: 1, Spelling errors: 0"}}
+}}
+
+⚠️ CRITICAL: Report comma errors EXACTLY like APEUni:
+- "Missing comma after 'word'" 
+- "Missing comma before 'word'"
+- Be specific about which word needs the comma
 """
 
         # Step 3: Call GPT-4 API
