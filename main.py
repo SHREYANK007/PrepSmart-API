@@ -476,13 +476,17 @@ async def score_summarize_written_text(
         # Use Hybrid Scoring instead of GPT-only
         from app.services.scoring.hybrid_scorer import hybrid_scorer
         
+        print(f"DEBUG: About to call hybrid scorer with: '{user_summary}'")
         analysis = hybrid_scorer.comprehensive_score(
             user_summary=user_summary,
             passage=reading_passage,
             key_points=key_points
         )
+        print(f"DEBUG: Hybrid scorer result: success={analysis.get('success')}")
+        print(f"DEBUG: Grammar errors found: {len(analysis.get('grammar_errors', []))}")
         
         if not analysis.get("success"):
+            print("DEBUG: Falling back to GPT scoring")
             # Fallback to GPT if hybrid fails
             analysis = await analyze_with_gpt4(
                 reading_passage=reading_passage,
@@ -491,6 +495,8 @@ async def score_summarize_written_text(
                 user_summary=user_summary,
                 question_title=question_title
             )
+        else:
+            print("DEBUG: Using hybrid scorer results")
         
         # Extract scores (hybrid format)
         if analysis.get("success"):
