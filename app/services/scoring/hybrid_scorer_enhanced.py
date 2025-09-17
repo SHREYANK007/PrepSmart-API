@@ -785,11 +785,19 @@ Return STRICT JSON:
             # Form check (simple)
             form_score, form_feedback = self._score_form(user_summary)
             
+            # DEBUG: Log before GPT call
+            logger.info("🔍 DEBUG: About to call GPT verification")
+            logger.info(f"🔍 DEBUG: use_gpt = {self.use_gpt}")
+            logger.info(f"🔍 DEBUG: openai_client exists = {self.openai_client is not None}")
+            
             # GPT Final Verification
             gpt_verification = self.gpt_final_verification(
                 passage, user_summary,
                 grammar_results, vocabulary_results, content_results
             )
+            
+            # DEBUG: Log GPT result
+            logger.info(f"🔍 DEBUG: GPT verification result = {gpt_verification}")
             
             # Compile final scores
             if gpt_verification.get("success"):
