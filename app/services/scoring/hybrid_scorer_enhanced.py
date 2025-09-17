@@ -844,7 +844,15 @@ Return STRICT JSON:
             if gpt_verification.get("success"):
                 # Use GPT-verified scores
                 final_scores = gpt_verification["verified_scores"]
-                additional_errors = gpt_verification.get("additional_errors_found", {})
+                
+                # Extract detailed errors with suggestions from new GPT structure
+                detailed_errors = gpt_verification.get("detailed_errors_with_suggestions", {})
+                additional_errors = {
+                    "grammar": [err.get("error", err.get("correction", "")) for err in detailed_errors.get("grammar", [])],
+                    "vocabulary": [err.get("error", err.get("correction", "")) for err in detailed_errors.get("vocabulary", [])],
+                    "content": [err.get("missing", err.get("suggestion", "")) for err in detailed_errors.get("content", [])]
+                }
+                
                 final_feedback = gpt_verification.get("final_feedback", {})
                 logger.info("✅ Using GPT-verified scores")
             else:
@@ -914,6 +922,7 @@ Return STRICT JSON:
                 "strengths": final_feedback.get("strengths", []),
                 "improvements": final_feedback.get("critical_improvements", []),
                 "harsh_assessment": final_feedback.get("harsh_assessment", ""),
+                "detailed_suggestions": gpt_verification.get("detailed_errors_with_suggestions", {}),
                 "feedback": {
                     "grammar": f"Grammar: {final_scores['grammar']}/2.0 - {len(grammar_errors)} errors found",
                     "vocabulary": f"Vocabulary: {final_scores['vocabulary']}/2.0 - {len(vocabulary_errors)} issues",
