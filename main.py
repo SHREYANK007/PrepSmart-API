@@ -877,6 +877,24 @@ async def score_ultimate_write_essay_endpoint(
                 raise Exception(f"Ultimate scoring failed: {result.get('error', 'Unknown error')}")
             
             print(f"✅ Ultimate scoring completed with total score: {result.get('total_score', 0)}/26")
+            
+            # Transform for frontend compatibility (add SWT-style fields expected by frontend)
+            if result.get("success"):
+                # Add frontend-compatible fields
+                result["strengths"] = result.get("strengths", [])
+                result["improvements"] = result.get("improvement_areas", [])
+                result["ai_recommendations"] = result.get("ai_recommendations", [])
+                result["feedback"] = {
+                    "content": f"Content Score: {result.get('scores', {}).get('content', 0)}/6",
+                    "form": f"Form Score: {result.get('scores', {}).get('form', 0)}/2",
+                    "development": f"Development Score: {result.get('scores', {}).get('development', 0)}/6",
+                    "grammar": f"Grammar Score: {result.get('scores', {}).get('grammar', 0)}/2",
+                    "linguistic": f"Linguistic Score: {result.get('scores', {}).get('linguistic', 0)}/6",
+                    "vocabulary": f"Vocabulary Score: {result.get('scores', {}).get('vocabulary', 0)}/2",
+                    "spelling": f"Spelling Score: {result.get('scores', {}).get('spelling', 0)}/2"
+                }
+                result["overall_feedback"] = f"Your essay scored {result.get('total_score', 0)}/26 ({result.get('percentage', 0)}%) - {result.get('band', 'Unknown')} level. {result.get('verification_notes', '')}"
+            
             return result
             
         except ImportError:

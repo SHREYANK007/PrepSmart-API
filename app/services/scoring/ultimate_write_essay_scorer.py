@@ -656,16 +656,16 @@ class UltimateWriteEssayScorer:
     def ultimate_gpt_final_verification(self, essay_prompt: str, user_essay: str, 
                                       ml_results: Dict) -> Dict:
         """
-        ULTIMATE GPT validator - 100+ point English inspection
-        Like SWT style - checks EVERYTHING if ML fails
+        ULTIMATE GPT validator - 100+ point English inspection + SWT-style insights
+        Like SWT style - checks EVERYTHING if ML fails + comprehensive recommendations
         """
         if not self.use_gpt:
             return {"success": False, "reason": "GPT unavailable"}
         
         try:
-            # Create comprehensive verification prompt
+            # Create comprehensive verification prompt with SWT-style insights
             verification_prompt = f"""
-You are the ULTIMATE PTE WRITE ESSAY EXAMINER performing 100+ point English validation.
+You are the ULTIMATE PTE WRITE ESSAY EXAMINER performing 100+ point English validation with SWT-style comprehensive insights and recommendations.
 
 ESSAY PROMPT: {essay_prompt}
 
@@ -684,9 +684,9 @@ ML SYSTEM ANALYSIS RESULTS:
 DETECTED ERRORS:
 {json.dumps(ml_results.get('all_errors', []), indent=2)}
 
-🔍 ULTIMATE 100+ POINT ENGLISH INSPECTION REQUIRED:
+🔍 ULTIMATE 100+ POINT ENGLISH INSPECTION + SWT-STYLE ANALYSIS REQUIRED:
 
-YOUR TASK: Act as FINAL VALIDATOR. Check EVERY aspect of English:
+YOUR TASK: Act as FINAL VALIDATOR with comprehensive SWT-style insights. Check EVERY aspect of English:
 
 1. SPELLING (100% accuracy required):
    - Check EVERY word for misspellings
@@ -736,14 +736,15 @@ YOUR TASK: Act as FINAL VALIDATOR. Check EVERY aspect of English:
    - Paragraph structure
    - Essay format
 
-SCORING INSTRUCTION:
+SCORING + SWT-STYLE COMPREHENSIVE ANALYSIS:
 - Use DECIMAL precision like APEUni (1.8/2, 3.4/6, 4.2/6)
 - If ML missed ANY errors, you MUST catch them
 - Cross-validate ML error classifications
 - Be as strict as SWT system in error detection
-- Provide corrected/verified scores
+- Provide detailed SWT-style insights, suggestions, and recommendations
+- Include specific improvement strategies and AI-powered recommendations
 
-Return EXACT JSON:
+Return EXACT JSON with SWT-style comprehensive analysis:
 {{
     "success": true,
     "verification_status": "confirmed|adjusted|major_corrections",
@@ -776,6 +777,19 @@ Return EXACT JSON:
         "critical_issues": ["issue 1", "issue 2"],
         "ml_accuracy": "ML missed X spelling errors",
         "overall_assessment": "Brief overall assessment"
+    }},
+    "swt_style_insights": {{
+        "strengths": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL STRENGTHS"],
+        "improvement_areas": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL IMPROVEMENT AREAS"],
+        "specific_suggestions": ["PROVIDE 5-7 SPECIFIC, ACTIONABLE SUGGESTIONS BASED ON ACTUAL ERRORS FOUND"],
+        "ai_recommendations": ["PROVIDE 5-7 INTELLIGENT AI-POWERED RECOMMENDATIONS BASED ON THE ESSAY'S ACTUAL WEAKNESSES"],
+        "error_patterns": ["IDENTIFY REAL ERROR PATTERNS FROM THE ACTUAL ESSAY"],
+        "strategic_improvements": ["PROVIDE TIMELINE-BASED IMPROVEMENT PLAN BASED ON ACTUAL ANALYSIS"],
+        "band_progression_pathway": {{
+            "current_estimated_band": "CALCULATE BASED ON ACTUAL SCORES",
+            "next_target_band": "DETERMINE NEXT REALISTIC TARGET",
+            "specific_steps_to_next_band": ["PROVIDE SPECIFIC STEPS BASED ON ACTUAL GAPS IDENTIFIED"]
+        }}
     }},
     "confidence": <0.0-1.0>
 }}
@@ -860,6 +874,7 @@ Return EXACT JSON:
                 final_scores = gpt_result["final_scores"]
                 verification_notes = f"GPT {gpt_result.get('verification_status', 'verified')}"
                 additional_errors = gpt_result.get("additional_errors_found", [])
+                swt_insights = gpt_result.get("swt_style_insights", {})
             else:
                 final_scores = {
                     'content': content_score.raw_score,
@@ -872,6 +887,7 @@ Return EXACT JSON:
                 }
                 verification_notes = "ML scores (GPT unavailable)"
                 additional_errors = []
+                swt_insights = {}
             
             # Step 6: Calculate totals with decimal precision
             total_score = sum(final_scores.values())
@@ -926,6 +942,16 @@ Return EXACT JSON:
                 # GPT enhancements
                 "additional_errors_found": additional_errors,
                 "ml_error_reclassifications": gpt_result.get("ml_error_reclassifications", []),
+                
+                # SWT-Style Comprehensive Insights
+                "swt_style_insights": swt_insights,
+                "strengths": swt_insights.get("strengths", []),
+                "improvement_areas": swt_insights.get("improvement_areas", []),
+                "specific_suggestions": swt_insights.get("specific_suggestions", []),
+                "ai_recommendations": swt_insights.get("ai_recommendations", []),
+                "error_patterns": swt_insights.get("error_patterns", []),
+                "strategic_improvements": swt_insights.get("strategic_improvements", []),
+                "band_progression_pathway": swt_insights.get("band_progression_pathway", {}),
                 
                 # Feedback
                 "detailed_feedback": gpt_result.get("detailed_feedback", {}),
