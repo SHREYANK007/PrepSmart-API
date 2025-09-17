@@ -828,8 +828,21 @@ Return EXACT JSON with independent analysis + ML comparison:
     "swt_style_insights": {{
         "strengths": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL STRENGTHS"],
         "improvement_areas": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL IMPROVEMENT AREAS"],
-        "specific_suggestions": ["PROVIDE 5-7 SPECIFIC, ACTIONABLE SUGGESTIONS BASED ON ACTUAL ERRORS FOUND"],
-        "ai_recommendations": ["PROVIDE 5-7 INTELLIGENT AI-POWERED RECOMMENDATIONS BASED ON THE ESSAY'S ACTUAL WEAKNESSES"],
+        "specific_suggestions": [
+            "MUST BE SPECIFIC TO ERRORS FOUND! Example: 'Fix spelling: strickly → strictly (line 3)'",
+            "Example: 'Grammar: Add comma before 'however' in paragraph 2'",
+            "Example: 'Vocabulary: Replace 'good' with 'beneficial' or 'advantageous' (used 5 times)'",
+            "Example: 'Structure: Add topic sentence to paragraph 3'",
+            "Example: 'Content: Include specific examples to support your argument about technology'",
+            "EACH SUGGESTION MUST REFERENCE AN ACTUAL ERROR OR WEAKNESS IN THE ESSAY"
+        ],
+        "ai_recommendations": [
+            "Based on YOUR spelling errors (list them), use spell-check before submission",
+            "Based on YOUR grammar patterns (list them), focus on [specific grammar rule]",
+            "Based on YOUR vocabulary repetition (list words), expand academic vocabulary",
+            "Based on YOUR structure issues (list them), practice paragraph organization",
+            "EACH RECOMMENDATION MUST BE SPECIFIC TO THIS ESSAY'S ACTUAL PROBLEMS"
+        ],
         "error_patterns": ["IDENTIFY REAL ERROR PATTERNS FROM THE ACTUAL ESSAY"],
         "strategic_improvements": ["PROVIDE TIMELINE-BASED IMPROVEMENT PLAN BASED ON ACTUAL ANALYSIS"],
         "band_progression_pathway": {{
