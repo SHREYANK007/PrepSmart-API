@@ -39,3 +39,14 @@ huggingface-hub>=0.15.0
 # Write Essay specific requirements
 pyspellchecker>=0.7.0
 lexicalrichness>=0.5.1
+
+# Enhanced scorer dependencies
+hunspell>=0.5.5
+pyhunspell>=0.5.1
+cyhunspell>=2.0.1
+
+# Mathematical and statistical operations
+scipy>=1.7.0
+
+# JSON schema validation
+jsonschema>=4.0.0
