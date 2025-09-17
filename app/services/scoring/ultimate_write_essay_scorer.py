@@ -286,7 +286,7 @@ class UltimateWriteEssayScorer:
                     error_type='spelling',
                     correction=correction,
                     confidence=1.0,
-                    rule_violated=f'Misspelling: {word} → {correction}',
+                    rule_violated=f'Misspelling: {word} to {correction}',
                     severity=0.5
                 ))
         
@@ -717,21 +717,21 @@ CRITICAL: DO YOUR OWN COMPLETE ANALYSIS OF ALL 7 COMPONENTS - Don't just review 
 
 6. VOCABULARY (0-2 points) - YOUR INDEPENDENT CHECK:
    - Check word choice appropriateness and precision
-   - Find collocation errors (make research → conduct research)
+   - Find collocation errors (make research to conduct research)
    - Assess academic vocabulary usage and register consistency
    - Rate with decimal precision
 
 7. SPELLING (0-2 points) - EXTREMELY STRICT PTE STANDARD:
-   ⚠️ PTE STRICT RULE: 1 spelling error = 1.0/2.0, 2+ spelling errors = 0.0/2.0 ⚠️
+   WARNING: PTE STRICT RULE: 1 spelling error = 1.0/2.0, 2+ spelling errors = 0.0/2.0
    
    CHECK EVERY SINGLE WORD CHARACTER BY CHARACTER:
-   - Common misspellings: strickly→strictly, becouse→because, untill→until
-   - Academic errors: arguement→argument, recieve→receive, seperate→separate
-   - Doubled consonants: occured→occurred, begining→beginning, recomend→recommend
-   - IE/EI confusion: beleive→believe, acheive→achieve, thier→their
-   - Silent letters: definately→definitely, goverment→government, enviroment→environment
+   - Common misspellings: strickly to strictly, becouse to because, untill to until
+   - Academic errors: arguement to argument, recieve to receive, seperate to separate
+   - Doubled consonants: occured to occurred, begining to beginning, recomend to recommend
+   - IE/EI confusion: beleive to believe, acheive to achieve, thier to their
+   - Silent letters: definately to definitely, goverment to government, enviroment to environment
    - Homophones: there/their/they're, to/too/two, your/you're
-   - Technology: tecnology→technology, sofware→software, developement→development
+   - Technology: tecnology to technology, sofware to software, developement to development
    
    YOU MUST FIND THEM ALL - Be as harsh as a real PTE examiner!
    If you find even ONE spelling error the ML missed, list it in additional_errors_found
@@ -829,7 +829,7 @@ Return EXACT JSON with independent analysis + ML comparison:
         "strengths": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL STRENGTHS"],
         "improvement_areas": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL IMPROVEMENT AREAS"],
         "specific_suggestions": [
-            "MUST BE SPECIFIC TO ERRORS FOUND! Example: 'Fix spelling: strickly → strictly (line 3)'",
+            "MUST BE SPECIFIC TO ERRORS FOUND! Example: 'Fix spelling: strickly to strictly (line 3)'",
             "Example: 'Grammar: Add comma before 'however' in paragraph 2'",
             "Example: 'Vocabulary: Replace 'good' with 'beneficial' or 'advantageous' (used 5 times)'",
             "Example: 'Structure: Add topic sentence to paragraph 3'",
@@ -996,9 +996,9 @@ Return EXACT JSON with independent analysis + ML comparison:
                 
                 # All detected errors
                 "errors": {
-                    "spelling": [f"{err.error_text} → {err.correction}" for err in spelling_errors],
+                    "spelling": [f"{err.error_text} to {err.correction}" for err in spelling_errors],
                     "grammar": [f"{err.error_text}: {err.rule_violated}" for err in grammar_errors],
-                    "vocabulary": [f"{err.error_text} → {err.correction}" for err in vocabulary_errors],
+                    "vocabulary": [f"{err.error_text} to {err.correction}" for err in vocabulary_errors],
                     "content": content_gaps,
                     "development": development_issues,
                     "linguistic": linguistic_features,

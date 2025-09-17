@@ -642,7 +642,25 @@ async def score_write_essay(
         from app.services.scoring.ultimate_write_essay_scorer import score_ultimate_write_essay
         
         print("ULTIMATE: Starting ML + GPT independent analysis workflow")
-        analysis = score_ultimate_write_essay(user_essay, essay_prompt)
+        raw_analysis = score_ultimate_write_essay(user_essay, essay_prompt)
+        
+        # CRITICAL: Clean all Unicode characters from Ultimate scorer response
+        def deep_clean_unicode(obj):
+            if isinstance(obj, str):
+                # Handle ALL Unicode characters that cause Windows encoding issues
+                import re
+                # Replace common problematic Unicode first
+                cleaned = obj.replace('→', ' to ').replace('✗', '').replace('✓', '').replace('↑', '').replace('↓', '').replace('⚠', 'WARNING').replace('️', '')
+                # Remove any remaining non-ASCII characters
+                cleaned = re.sub(r'[^\x00-\x7F]+', '', cleaned)
+                return cleaned.strip()
+            elif isinstance(obj, list):
+                return [deep_clean_unicode(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {k: deep_clean_unicode(v) for k, v in obj.items()}
+            return obj
+            
+        analysis = deep_clean_unicode(raw_analysis)
         
         if not analysis.get("success"):
             raise HTTPException(status_code=500, detail=f"Ultimate scorer failed: {analysis.get('error', 'ML+GPT analysis failed')}")
@@ -679,6 +697,13 @@ async def score_write_essay(
         comp_scores = analysis["component_scores"]
         errors_dict = analysis.get("errors", {})
         
+        try:
+            print(f"DEBUG: errors_dict keys = {list(errors_dict.keys())}")
+            print(f"DEBUG: spelling errors count = {len(errors_dict.get('spelling', []))}")
+            print(f"DEBUG: grammar errors count = {len(errors_dict.get('grammar', []))}")
+        except Exception as debug_error:
+            print(f"DEBUG: Could not print errors_dict due to encoding: {debug_error}")
+        
         # Extract SWT-style suggestions from Ultimate scorer
         specific_suggestions = analysis.get("specific_suggestions", [])
         ai_recommendations = analysis.get("ai_recommendations", [])
@@ -686,14 +711,33 @@ async def score_write_essay(
         improvement_areas = analysis.get("improvement_areas", [])
         
         # Function to get SPECIFIC ERROR-BASED suggestions
-        def get_error_specific_suggestions(component, component_errors):
+        def get_error_specific_suggestions(component, component_errors, component_score):
             suggestions = []
+            try:
+                print(f"DEBUG: get_error_specific_suggestions called for {component}")
+                print(f"DEBUG: component_errors count = {len(component_errors) if component_errors else 0}")
+                print(f"DEBUG: component_score = {component_score}")
+            except Exception as debug_error:
+                print(f"DEBUG: Unicode error in suggestion debug: {debug_error}")
             
             # PRIORITY 1: Create suggestions based on ACTUAL ERRORS FOUND
             if component == "spelling" and component_errors:
-                # Show actual spelling mistakes
+                print(f"DEBUG: Adding spelling suggestions for {len(component_errors)} errors")
+                # Show actual spelling mistakes - handle Unicode safely
                 for error in component_errors[:3]:  # Show first 3 errors
-                    suggestions.append(f"Fix spelling: {error}")
+                    try:
+                        # Aggressive Unicode cleaning for spelling errors
+                        import re
+                        clean_error = str(error).replace('→', ' to ').replace('✗', '').replace('✓', '').strip()
+                        # Remove any remaining non-ASCII characters
+                        clean_error = re.sub(r'[^\x00-\x7F]+', '', clean_error).strip()
+                        if clean_error:
+                            suggestions.append(f"Fix spelling: {clean_error}")
+                        else:
+                            suggestions.append("Fix spelling error detected")
+                    except Exception as e:
+                        print(f"DEBUG: Error processing spelling suggestion: {e}")
+                        suggestions.append("Fix spelling error found by system")
                 if len(component_errors) > 3:
                     suggestions.append(f"Plus {len(component_errors) - 3} more spelling errors to fix")
                     
@@ -738,20 +782,45 @@ async def score_write_essay(
                 if component.lower() in improvement.lower() and len(suggestions) < 3:
                     suggestions.append(improvement)
                     
-            # PRIORITY 4: If still no suggestions, provide targeted advice based on score
+            # PRIORITY 4: Always provide at least basic suggestions
             if len(suggestions) == 0:
-                score = scores.get(component, 0)
-                max_score = 6 if component in ["content", "linguistic", "coherence"] else 2
+                score = component_score
+                max_score = 6 if component in ["content", "linguistic", "development", "coherence"] else 2
                 
-                if score < max_score * 0.5:  # Very low score
-                    suggestions.append(f"Critical: Your {component} needs major improvement")
-                    suggestions.append(f"Focus on fundamental {component} skills")
-                elif score < max_score * 0.8:  # Medium score
-                    suggestions.append(f"Improve {component} for higher scores")
-                    suggestions.append(f"Practice advanced {component} techniques")
-                else:  # Good score
-                    suggestions.append(f"Good {component} - minor refinements needed")
+                # Provide specific suggestions for each component
+                if component == "spelling":
+                    if score < 2.0:
+                        suggestions.append("Review your spelling - errors detected")
+                        suggestions.append("Use spell-check before submitting")
+                        suggestions.append("Practice commonly misspelled words")
+                elif component == "grammar":
+                    if score < 2.0:
+                        suggestions.append("Fix grammatical errors in your essay")
+                        suggestions.append("Review punctuation and sentence structure")
+                        suggestions.append("Check subject-verb agreement")
+                elif component == "vocabulary":
+                    suggestions.append("Expand your vocabulary range")
+                    suggestions.append("Avoid repeating common words")
+                    suggestions.append("Use more academic terminology")
+                elif component == "content":
+                    suggestions.append("Address all parts of the essay prompt")
+                    suggestions.append("Provide specific examples and evidence")
+                    suggestions.append("Develop your arguments more thoroughly")
+                elif component == "development" or component == "coherence":
+                    suggestions.append("Improve paragraph organization")
+                    suggestions.append("Use transition words between ideas")
+                    suggestions.append("Ensure logical flow of arguments")
+                elif component == "linguistic":
+                    suggestions.append("Use more complex sentence structures")
+                    suggestions.append("Include subordinate clauses")
+                    suggestions.append("Vary sentence lengths and types")
+                elif component == "form":
+                    if score < 2.0:
+                        suggestions.append("Check essay length (200-300 words required)")
+                        suggestions.append("Use proper paragraph structure")
+                        suggestions.append("Include introduction and conclusion")
                     
+            print(f"DEBUG: Final suggestions for {component}: {suggestions}")
             return suggestions[:3]  # Maximum 3 suggestions per component
         
         detailed_feedback = {
@@ -759,43 +828,43 @@ async def score_write_essay(
                 score=content_score,
                 justification=comp_scores.get("content", f"Content: {content_score}/6"),
                 errors=errors_dict.get("content", []),
-                suggestions=get_error_specific_suggestions("content", errors_dict.get("content", []))
+                suggestions=get_error_specific_suggestions("content", errors_dict.get("content", []), content_score)
             ),
             "linguistic": EssayFeedback(
                 score=linguistic_score,
                 justification=comp_scores.get("linguistic", f"Linguistic Range: {linguistic_score}/6"),
                 errors=errors_dict.get("linguistic", []),
-                suggestions=get_error_specific_suggestions("linguistic", errors_dict.get("linguistic", []))
+                suggestions=get_error_specific_suggestions("linguistic", errors_dict.get("linguistic", []), linguistic_score)
             ),
             "coherence": EssayFeedback(
                 score=coherence_score,
                 justification=comp_scores.get("development", f"Development: {coherence_score}/6"),
                 errors=errors_dict.get("development", []),
-                suggestions=get_error_specific_suggestions("development", errors_dict.get("development", []))
+                suggestions=get_error_specific_suggestions("development", errors_dict.get("development", []), coherence_score)
             ),
             "form": EssayFeedback(
                 score=form_score,
                 justification=comp_scores.get("form", f"Form: {form_score}/2"),
                 errors=errors_dict.get("form", []),
-                suggestions=get_error_specific_suggestions("form", errors_dict.get("form", []))
+                suggestions=get_error_specific_suggestions("form", errors_dict.get("form", []), form_score)
             ),
             "grammar": EssayFeedback(
                 score=grammar_score,
                 justification=comp_scores.get("grammar", f"Grammar: {grammar_score}/2"),
                 errors=errors_dict.get("grammar", []),
-                suggestions=get_error_specific_suggestions("grammar", errors_dict.get("grammar", []))
+                suggestions=get_error_specific_suggestions("grammar", errors_dict.get("grammar", []), grammar_score)
             ),
             "spelling": EssayFeedback(
                 score=spelling_score,
                 justification=comp_scores.get("spelling", f"Spelling: {spelling_score}/2"),
                 errors=errors_dict.get("spelling", []),
-                suggestions=get_error_specific_suggestions("spelling", errors_dict.get("spelling", []))
+                suggestions=get_error_specific_suggestions("spelling", errors_dict.get("spelling", []), spelling_score)
             ),
             "vocabulary": EssayFeedback(
                 score=vocabulary_score,
                 justification=comp_scores.get("vocabulary", f"Vocabulary: {vocabulary_score}/2"),
                 errors=errors_dict.get("vocabulary", []),
-                suggestions=get_error_specific_suggestions("vocabulary", errors_dict.get("vocabulary", []))
+                suggestions=get_error_specific_suggestions("vocabulary", errors_dict.get("vocabulary", []), vocabulary_score)
             )
         }
         
@@ -809,6 +878,22 @@ async def score_write_essay(
             "spelling": detailed_feedback["spelling"].justification,
             "vocabulary": detailed_feedback["vocabulary"].justification
         }
+        
+        # CRITICAL: Clean all Unicode characters that cause encoding issues
+        def clean_unicode_text(text):
+            if isinstance(text, str):
+                return text.replace('→', 'to').replace('✗', '').replace('✓', '').replace('↑', '').replace('↓', '').strip()
+            elif isinstance(text, list):
+                return [clean_unicode_text(item) for item in text]
+            elif isinstance(text, dict):
+                return {k: clean_unicode_text(v) for k, v in text.items()}
+            return text
+            
+        # Clean the detailed_feedback to prevent Unicode errors
+        for component_name, feedback in detailed_feedback.items():
+            feedback.errors = clean_unicode_text(feedback.errors)
+            feedback.suggestions = clean_unicode_text(feedback.suggestions)
+            feedback.justification = clean_unicode_text(feedback.justification)
         
         return WriteEssayResponse(
             success=True,
