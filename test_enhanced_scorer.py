@@ -14,7 +14,7 @@ load_dotenv()
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer
+from app.services.scoring.hybrid_scorer_enhanced import get_enhanced_scorer
 
 def test_case_1():
     """Test with grammar and vocabulary errors"""
