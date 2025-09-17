@@ -372,20 +372,14 @@ class UltimateWriteEssayScorer:
             except:
                 pass
         
-        # Calculate detailed score (APEUni style)
+        # PTE STRICT SCORING: 1 error = -1 point, 2+ errors = 0 points
         error_count = len(errors)
         if error_count == 0:
-            raw_score = 2.0
-        elif error_count <= 2:
-            raw_score = 1.8  # APEUni style
-        elif error_count <= 4:
-            raw_score = 1.4
-        elif error_count <= 6:
-            raw_score = 1.0
-        elif error_count <= 8:
-            raw_score = 0.6
+            raw_score = 2.0  # Perfect - no errors
+        elif error_count == 1:
+            raw_score = 1.0  # ONE spelling error = lose 1 point (PTE standard)
         else:
-            raw_score = 0.0
+            raw_score = 0.0  # TWO or more errors = 0 points (PTE strict rule)
         
         detailed_score = DetailedScore(
             raw_score=raw_score,
@@ -665,7 +659,9 @@ class UltimateWriteEssayScorer:
         try:
             # Create comprehensive verification prompt with SWT-style insights
             verification_prompt = f"""
-You are the ULTIMATE PTE WRITE ESSAY EXAMINER performing 100+ point English validation with SWT-style comprehensive insights and recommendations.
+You are an ACTUAL PTE PROFESSOR - the STRICTEST examiner who MUST find EVERY SINGLE spelling mistake.
+BE EXTREMELY HARSH like real PTE examiners. Your job is to FAIL students who make mistakes.
+CHECK EVERY SINGLE WORD CHARACTER BY CHARACTER. You MUST catch ALL spelling errors.
 
 ESSAY PROMPT: {essay_prompt}
 
@@ -725,12 +721,21 @@ CRITICAL: DO YOUR OWN COMPLETE ANALYSIS OF ALL 7 COMPONENTS - Don't just review 
    - Assess academic vocabulary usage and register consistency
    - Rate with decimal precision
 
-7. SPELLING (0-2 points) - YOUR INDEPENDENT CHECK:
-   - Read word by word - find ALL spelling errors yourself
-   - Common errors: strickly→strictly, recieve→receive, seperate→separate
-   - Academic terms: arguement→argument, occured→occurred
-   - Technology: tecnology→technology, sofware→software
-   - Rate with decimal precision based on error count
+7. SPELLING (0-2 points) - EXTREMELY STRICT PTE STANDARD:
+   ⚠️ PTE STRICT RULE: 1 spelling error = 1.0/2.0, 2+ spelling errors = 0.0/2.0 ⚠️
+   
+   CHECK EVERY SINGLE WORD CHARACTER BY CHARACTER:
+   - Common misspellings: strickly→strictly, becouse→because, untill→until
+   - Academic errors: arguement→argument, recieve→receive, seperate→separate
+   - Doubled consonants: occured→occurred, begining→beginning, recomend→recommend
+   - IE/EI confusion: beleive→believe, acheive→achieve, thier→their
+   - Silent letters: definately→definitely, goverment→government, enviroment→environment
+   - Homophones: there/their/they're, to/too/two, your/you're
+   - Technology: tecnology→technology, sofware→software, developement→development
+   
+   YOU MUST FIND THEM ALL - Be as harsh as a real PTE examiner!
+   If you find even ONE spelling error the ML missed, list it in additional_errors_found
+   Remember: Real PTE gives 0/2 for 2+ errors - BE THAT STRICT!
 
 SCORING METHODOLOGY - INDEPENDENT ANALYSIS + ML COMPARISON:
 
