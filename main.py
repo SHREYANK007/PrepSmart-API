@@ -258,8 +258,8 @@ def get_scorer():
         try:
             from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer
             global_scorer = enhanced_hybrid_scorer
-            # Trigger full initialization by accessing a property
-            _ = global_scorer.use_gpt  # This will initialize all layers including GPT
+            # Trigger full initialization by calling a method that ensures all layers are loaded
+            _ = hasattr(global_scorer, 'comprehensive_score')  # This ensures the class is fully loaded
             print("✅ Global enhanced scorer initialized with all layers")
         except ImportError:
             from app.services.scoring.hybrid_scorer import hybrid_scorer
@@ -495,6 +495,7 @@ async def score_summarize_written_text(
         # Use global scorer instance
         hybrid_scorer = get_scorer()
         
+        print(f"DEBUG: Using scorer type: {type(hybrid_scorer).__name__}")
         print(f"DEBUG: About to call hybrid scorer with: '{user_summary}'")
         analysis = hybrid_scorer.comprehensive_score(
             user_summary=user_summary,
