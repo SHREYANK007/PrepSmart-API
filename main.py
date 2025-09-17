@@ -679,48 +679,109 @@ async def score_write_essay(
         comp_scores = analysis["component_scores"]
         errors_dict = analysis.get("errors", {})
         
+        # Extract SWT-style suggestions from Ultimate scorer
+        specific_suggestions = analysis.get("specific_suggestions", [])
+        ai_recommendations = analysis.get("ai_recommendations", [])
+        strategic_improvements = analysis.get("strategic_improvements", [])
+        improvement_areas = analysis.get("improvement_areas", [])
+        
+        # Function to get component-specific suggestions
+        def get_component_suggestions(component):
+            component_suggestions = []
+            
+            # Add specific suggestions for this component
+            for suggestion in specific_suggestions:
+                if component.lower() in suggestion.lower():
+                    component_suggestions.append(suggestion)
+            
+            # Add general AI recommendations
+            for rec in ai_recommendations[:2]:  # Limit to 2 most relevant
+                if rec not in component_suggestions:
+                    component_suggestions.append(rec)
+                
+            # Add strategic improvements if relevant
+            for improvement in strategic_improvements:
+                if component.lower() in improvement.lower() and improvement not in component_suggestions:
+                    component_suggestions.append(improvement)
+                    
+            # Ensure we have at least 1-2 suggestions per component
+            if len(component_suggestions) == 0:
+                # Add fallback suggestions based on component
+                fallback_suggestions = {
+                    "content": ["Address all parts of the prompt", "Provide more specific examples"],
+                    "linguistic": ["Use more complex sentence structures", "Include subordinate clauses"],
+                    "development": ["Improve paragraph organization", "Use transition words between ideas"],
+                    "grammar": ["Check verb tenses carefully", "Review subject-verb agreement"],
+                    "spelling": ["Use spell-check tools", "Practice common word spellings"],
+                    "vocabulary": ["Use more sophisticated vocabulary", "Avoid word repetition"]
+                }
+                component_suggestions.extend(fallback_suggestions.get(component, ["Practice this skill area"]))
+                    
+            return component_suggestions[:3]  # Limit to 3 suggestions per component
+        
         detailed_feedback = {
             "content": EssayFeedback(
                 score=content_score,
                 justification=comp_scores.get("content", f"Content: {content_score}/6"),
                 errors=errors_dict.get("content", []),
-                suggestions=analysis.get("detailed_feedback", {}).get("content_improvements", [])
+                suggestions=get_component_suggestions("content") + [
+                    "Address all aspects of the prompt directly",
+                    "Support arguments with specific examples"
+                ]
             ),
             "linguistic": EssayFeedback(
                 score=linguistic_score,
                 justification=comp_scores.get("linguistic", f"Linguistic Range: {linguistic_score}/6"),
                 errors=errors_dict.get("linguistic", []),
-                suggestions=analysis.get("detailed_feedback", {}).get("linguistic_improvements", [])
+                suggestions=get_component_suggestions("linguistic") + [
+                    "Use a variety of sentence structures",
+                    "Include complex grammatical forms"
+                ]
             ),
             "coherence": EssayFeedback(
                 score=coherence_score,
                 justification=comp_scores.get("development", f"Development: {coherence_score}/6"),
                 errors=errors_dict.get("development", []),
-                suggestions=analysis.get("detailed_feedback", {}).get("development_improvements", [])
+                suggestions=get_component_suggestions("development") + [
+                    "Use clear topic sentences in each paragraph",
+                    "Connect ideas with linking words"
+                ]
             ),
             "form": EssayFeedback(
                 score=form_score,
                 justification=comp_scores.get("form", f"Form: {form_score}/2"),
                 errors=errors_dict.get("form", []),
-                suggestions=[]
+                suggestions=[
+                    "Maintain appropriate essay length (200-300 words)",
+                    "Follow standard essay structure"
+                ]
             ),
             "grammar": EssayFeedback(
                 score=grammar_score,
                 justification=comp_scores.get("grammar", f"Grammar: {grammar_score}/2"),
                 errors=errors_dict.get("grammar", []),
-                suggestions=analysis.get("detailed_feedback", {}).get("grammar_improvements", [])
+                suggestions=get_component_suggestions("grammar") + [
+                    "Review subject-verb agreement",
+                    "Check verb tenses for consistency"
+                ]
             ),
             "spelling": EssayFeedback(
                 score=spelling_score,
                 justification=comp_scores.get("spelling", f"Spelling: {spelling_score}/2"),
                 errors=errors_dict.get("spelling", []),
-                suggestions=["Check spelling carefully"]
+                suggestions=get_component_suggestions("spelling") + [
+                    f"Correct spelling errors: {', '.join(errors_dict.get('spelling', [])[:3])}" if errors_dict.get('spelling') else "Use spell-check tools",
+                    "Practice common academic word spellings"
+                ]
             ),
             "vocabulary": EssayFeedback(
                 score=vocabulary_score,
                 justification=comp_scores.get("vocabulary", f"Vocabulary: {vocabulary_score}/2"),
                 errors=errors_dict.get("vocabulary", []),
-                suggestions=analysis.get("detailed_feedback", {}).get("vocabulary_improvements", [])
+                suggestions=get_component_suggestions("vocabulary") + [
+                    "Use more varied and sophisticated vocabulary",
+                    "Avoid repetition of common words"
+                ]
             )
         }
         
@@ -748,7 +809,7 @@ async def score_write_essay(
             },
             feedback=feedback,
             detailed_feedback=detailed_feedback,
-            overall_feedback=analysis.get("overall_assessment", f"Your essay scored {total_score}/26."),
+            overall_feedback=analysis.get("verification_notes", f"Your essay scored {total_score}/26."),
             total_score=total_score,
             percentage=percentage,
             band=band,
@@ -756,9 +817,9 @@ async def score_write_essay(
             paragraph_count=analysis.get("paragraph_count", 0),
             key_arguments_covered=analysis.get("key_arguments_covered", []),
             key_arguments_missed=analysis.get("key_arguments_missed", []),
-            strengths=analysis.get("strengths", []),
-            improvements=analysis.get("improvements", analysis.get("priority_improvements", [])),
-            ai_recommendations=analysis.get("ai_recommendations", analysis.get("specific_suggestions", analysis.get("priority_improvements", [])))
+            strengths=analysis.get("strengths", analysis.get("swt_style_insights", {}).get("strengths", ["Good effort on essay writing"])),
+            improvements=analysis.get("improvement_areas", analysis.get("swt_style_insights", {}).get("improvement_areas", [])),
+            ai_recommendations=analysis.get("ai_recommendations", analysis.get("specific_suggestions", analysis.get("strategic_improvements", ["Practice writing regularly", "Focus on grammar and spelling accuracy", "Expand vocabulary range"])))
         )
         
     except HTTPException:
