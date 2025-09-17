@@ -943,6 +943,50 @@ async def test_spelling_detection_endpoint(test_text: str = Form(...)):
         print(f"Spelling test failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Test GPT spelling detection endpoint
+@app.post("/api/v1/writing/test-gpt-spelling")
+async def test_gpt_spelling_detection(test_text: str = Form(...)):
+    """
+    Test endpoint to check if GPT finds spelling errors directly
+    """
+    try:
+        from app.services.scoring.ultimate_write_essay_scorer import get_ultimate_essay_scorer
+        
+        scorer = get_ultimate_essay_scorer()
+        
+        if not scorer.use_gpt:
+            raise HTTPException(status_code=503, detail="GPT unavailable - check OPENAI_API_KEY")
+        
+        # Simple ML results for testing
+        ml_results = {
+            'spelling_score': 2.0,
+            'grammar_score': 2.0,
+            'vocabulary_score': 2.0,
+            'content_score': 6.0,
+            'development_score': 6.0,
+            'linguistic_score': 6.0,
+            'form_score': 2.0,
+            'all_errors': []
+        }
+        
+        # Test GPT spelling detection
+        gpt_result = scorer.ultimate_gpt_final_verification("Test spelling", test_text, ml_results)
+        
+        return {
+            "success": True,
+            "text_analyzed": test_text,
+            "gpt_found_errors": gpt_result.get("additional_errors_found", []),
+            "gpt_spelling_score": gpt_result.get("final_scores", {}).get("spelling", 0),
+            "api_cost": scorer.total_api_cost,
+            "gpt_confidence": gpt_result.get("confidence", 0.0)
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Ultimate scorer not available")
+    except Exception as e:
+        print(f"GPT spelling test failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     import ssl

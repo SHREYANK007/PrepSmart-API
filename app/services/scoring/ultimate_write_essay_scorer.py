@@ -688,11 +688,17 @@ DETECTED ERRORS:
 
 YOUR TASK: Act as FINAL VALIDATOR with comprehensive SWT-style insights. Check EVERY aspect of English:
 
-1. SPELLING (100% accuracy required):
-   - Check EVERY word for misspellings
-   - Pay special attention to adverbs ending in -ly (strickly→strictly)
-   - Common academic misspellings
-   - Technology and formal writing terms
+CRITICAL: IGNORE ML RESULTS FOR SPELLING - DO YOUR OWN ANALYSIS
+
+1. SPELLING (100% accuracy required - FIND ALL ERRORS YOURSELF):
+   - Read the essay word by word and check EVERY single word for spelling
+   - Look for common misspellings: strickly→strictly, recieve→receive, seperate→separate
+   - Pay special attention to adverbs ending in -ly (strickly, definatly, immediatly)
+   - Check academic misspellings: arguement→argument, occured→occurred
+   - Check technology terms: tecnology→technology, sofware→software
+   - Check doubled letters: accomodate→accommodate, embarass→embarrass
+   - Check -ence/-ance endings: independance→independence, existance→existence
+   - FIND EVERY SPELLING ERROR - don't rely on ML system
    
 2. GRAMMAR (50+ rules):
    - Articles (a/an/the)
@@ -738,11 +744,18 @@ YOUR TASK: Act as FINAL VALIDATOR with comprehensive SWT-style insights. Check E
 
 SCORING + SWT-STYLE COMPREHENSIVE ANALYSIS:
 - Use DECIMAL precision like APEUni (1.8/2, 3.4/6, 4.2/6)
-- If ML missed ANY errors, you MUST catch them
+- CRITICAL: Do your OWN spelling analysis - don't trust ML results
+- If you find spelling errors that ML missed, include them in "additional_errors_found"
 - Cross-validate ML error classifications
 - Be as strict as SWT system in error detection
 - Provide detailed SWT-style insights, suggestions, and recommendations
 - Include specific improvement strategies and AI-powered recommendations
+
+SPELLING INSTRUCTION: Look at each word in the essay individually:
+- If you see "strickly" → mark as error: {"error": "strickly", "correction": "strictly", "type": "spelling"}
+- If you see "recieve" → mark as error: {"error": "recieve", "correction": "receive", "type": "spelling"}
+- If you see "seperate" → mark as error: {"error": "seperate", "correction": "separate", "type": "spelling"}
+- Check EVERY word - don't assume ML found everything
 
 Return EXACT JSON with SWT-style comprehensive analysis:
 {{
