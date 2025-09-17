@@ -638,16 +638,57 @@ async def score_write_essay(
         if not user_essay.strip():
             raise HTTPException(status_code=400, detail="Essay cannot be empty")
         
-        # Try to use 3-layer scorer first
+        # Try to use ULTIMATE scorer first for detailed SWT-style feedback
         try:
-            from app.services.scoring.write_essay_scorer import get_essay_scorer
-            essay_scorer = get_essay_scorer()
+            from app.services.scoring.ultimate_write_essay_scorer import score_ultimate_write_essay
             
-            # Use 3-layer scorer
-            analysis = essay_scorer.score_essay(
-                user_essay=user_essay,
-                essay_prompt=essay_prompt
-            )
+            print("🎯 Using ULTIMATE Write Essay Scorer for detailed feedback")
+            ultimate_result = score_ultimate_write_essay(user_essay, essay_prompt)
+            
+            if ultimate_result.get("success"):
+                # Transform ultimate result to expected format
+                analysis = {
+                    "success": True,
+                    "scores": ultimate_result.get("scores", {}),
+                    "total_score": ultimate_result.get("total_score", 0),
+                    "percentage": ultimate_result.get("percentage", 0),
+                    "band": ultimate_result.get("band", "Unknown"),
+                    "word_count": ultimate_result.get("word_count", 0),
+                    "paragraph_count": ultimate_result.get("paragraph_count", 0),
+                    
+                    # Enhanced SWT-style feedback
+                    "strengths": ultimate_result.get("strengths", []),
+                    "improvements": ultimate_result.get("improvement_areas", []),
+                    "ai_recommendations": ultimate_result.get("ai_recommendations", []),
+                    "specific_suggestions": ultimate_result.get("specific_suggestions", []),
+                    "error_patterns": ultimate_result.get("error_patterns", []),
+                    "strategic_improvements": ultimate_result.get("strategic_improvements", []),
+                    
+                    # Detailed errors
+                    "errors": ultimate_result.get("errors", {}),
+                    "additional_errors_found": ultimate_result.get("additional_errors_found", []),
+                    
+                    # GPT insights
+                    "swt_style_insights": ultimate_result.get("swt_style_insights", {}),
+                    "gpt_vs_ml_comparison": ultimate_result.get("gpt_vs_ml_comparison", {}),
+                    "verification_notes": ultimate_result.get("verification_notes", "")
+                }
+                print("✅ Ultimate scorer provided detailed SWT-style feedback")
+            else:
+                raise Exception("Ultimate scorer failed, falling back")
+            
+        except Exception as e:
+            print(f"Ultimate scorer failed: {e}, trying 3-layer scorer")
+            # Fallback to 3-layer scorer
+            try:
+                from app.services.scoring.write_essay_scorer import get_essay_scorer
+                essay_scorer = get_essay_scorer()
+                
+                # Use 3-layer scorer
+                analysis = essay_scorer.score_essay(
+                    user_essay=user_essay,
+                    essay_prompt=essay_prompt
+                )
             
             # Map to expected format
             if analysis.get("success"):
@@ -827,8 +868,8 @@ async def score_write_essay(
             key_arguments_covered=analysis.get("key_arguments_covered", []),
             key_arguments_missed=analysis.get("key_arguments_missed", []),
             strengths=analysis.get("strengths", []),
-            improvements=analysis.get("priority_improvements", []),
-            ai_recommendations=analysis.get("priority_improvements", [])
+            improvements=analysis.get("improvements", analysis.get("priority_improvements", [])),
+            ai_recommendations=analysis.get("ai_recommendations", analysis.get("specific_suggestions", analysis.get("priority_improvements", [])))
         )
         
     except HTTPException:
