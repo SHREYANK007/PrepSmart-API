@@ -224,7 +224,9 @@ class HybridScorer:
         self.openai_client = None
         self.use_gpt = False
         
+        logger.info(f"🔍 API Key found: {bool(api_key)}")
         if api_key:
+            logger.info(f"🔑 API Key length: {len(api_key) if api_key else 0}")
             try:
                 self.openai_client = OpenAI(api_key=api_key)
                 self.use_gpt = True
