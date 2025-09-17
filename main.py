@@ -32,6 +32,20 @@ class WriteEssayResponse(BaseModel):
     improvements: List[str]
     ai_recommendations: List[str]
 
+class SummarizeSpokenTextResponse(BaseModel):
+    success: bool
+    scores: Dict[str, float]
+    feedback: Dict[str, str]
+    detailed_feedback: Dict[str, EssayFeedback]
+    overall_feedback: str
+    total_score: float
+    percentage: int
+    band: str
+    word_count: int
+    sentence_count: int
+    improvements: List[str]
+    ai_recommendations: List[str]
+
 async def analyze_essay_with_gpt4(
     essay_prompt: str,
     essay_type: str,
@@ -1052,6 +1066,178 @@ async def test_spelling_detection_endpoint(test_text: str = Form(...)):
         raise HTTPException(status_code=503, detail="Ultimate scorer not available")
     except Exception as e:
         print(f"Spelling test failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# SST endpoint with 4-layer hybrid scorer
+@app.post("/api/v1/listening/summarize-spoken-text", response_model=SummarizeSpokenTextResponse)
+async def summarize_spoken_text(
+    audio_transcript: str = Form(...),
+    key_points: str = Form(...)
+):
+    """
+    Summarize Spoken Text (SST) endpoint using 4-layer hybrid scorer
+    Scoring: Content(2) + Grammar(2) + Vocabulary(2) + Form(2) + Spelling(2) = 10 points
+    """
+    try:
+        from app.services.scoring.hybrid_scorer_4layer import get_4layer_scorer
+        
+        # Initialize 4-layer scorer
+        scorer = get_4layer_scorer()
+        
+        # Run comprehensive scoring
+        scoring_result = scorer.comprehensive_score(
+            user_summary=audio_transcript, 
+            passage="",  # SST doesn't have reference passage
+            key_points=key_points
+        )
+        
+        if not scoring_result['success']:
+            raise HTTPException(status_code=500, detail=f"Scoring failed: {scoring_result.get('error', 'Unknown error')}")
+        
+        # Extract scores
+        grammar_score = scoring_result['scores']['grammar']
+        vocabulary_score = scoring_result['scores']['vocabulary'] 
+        content_score = scoring_result['scores']['content']
+        spelling_score = scoring_result['scores']['spelling']
+        
+        # Form analysis - SST requires single sentence (2 points if met, 0 if not)
+        sentences = audio_transcript.strip().split('.')
+        sentence_count = len([s for s in sentences if s.strip()])
+        form_score = 2.0 if sentence_count == 1 else 0.0
+        
+        # Word count analysis
+        words = audio_transcript.strip().split()
+        word_count = len(words)
+        
+        # Total score calculation
+        total_score = grammar_score + vocabulary_score + content_score + form_score + spelling_score
+        percentage = int((total_score / 10.0) * 100)
+        
+        # Band calculation (SST uses 10-point scale)
+        if percentage >= 85:
+            band = "Superior"
+        elif percentage >= 76:
+            band = "Advanced"
+        elif percentage >= 59:
+            band = "Good"
+        elif percentage >= 43:
+            band = "Intermediate"
+        elif percentage >= 30:
+            band = "Below Intermediate"
+        else:
+            band = "Beginner"
+        
+        # Create detailed feedback objects
+        detailed_feedback = {}
+        
+        # Grammar feedback
+        grammar_feedback = EssayFeedback(
+            score=grammar_score,
+            justification=f"Grammar analysis: {len(scoring_result['detailed_feedback']['grammar']['errors'])} errors found",
+            errors=scoring_result['detailed_feedback']['grammar']['errors'],
+            suggestions=scoring_result['detailed_feedback']['grammar']['suggestions']
+        )
+        detailed_feedback['grammar'] = grammar_feedback
+        
+        # Vocabulary feedback  
+        vocabulary_feedback = EssayFeedback(
+            score=vocabulary_score,
+            justification=f"Vocabulary sophistication analysis completed",
+            errors=scoring_result['detailed_feedback']['vocabulary']['errors'],
+            suggestions=scoring_result['detailed_feedback']['vocabulary']['suggestions']
+        )
+        detailed_feedback['vocabulary'] = vocabulary_feedback
+        
+        # Content feedback
+        content_feedback = EssayFeedback(
+            score=content_score,
+            justification=f"Content analysis: key points coverage evaluated",
+            errors=scoring_result['detailed_feedback']['content']['errors'],
+            suggestions=scoring_result['detailed_feedback']['content']['suggestions']
+        )
+        detailed_feedback['content'] = content_feedback
+        
+        # Form feedback
+        form_errors = [] if sentence_count == 1 else ["Response must be a single sentence"]
+        form_suggestions = [] if sentence_count == 1 else ["Combine your ideas into one complete sentence"]
+        form_feedback = EssayFeedback(
+            score=form_score,
+            justification=f"Form analysis: {sentence_count} sentence(s) found (requirement: 1)",
+            errors=form_errors,
+            suggestions=form_suggestions
+        )
+        detailed_feedback['form'] = form_feedback
+        
+        # Spelling feedback
+        spelling_feedback = EssayFeedback(
+            score=spelling_score,
+            justification=f"Spelling analysis: {len(scoring_result['detailed_feedback']['spelling']['errors'])} errors found",
+            errors=scoring_result['detailed_feedback']['spelling']['errors'],
+            suggestions=scoring_result['detailed_feedback']['spelling']['suggestions']
+        )
+        detailed_feedback['spelling'] = spelling_feedback
+        
+        # Error-specific suggestions for frontend
+        feedback_dict = {}
+        for component_name, feedback_obj in detailed_feedback.items():
+            suggestions_text = "; ".join(feedback_obj.suggestions) if feedback_obj.suggestions else f"No specific {component_name} issues found"
+            feedback_dict[component_name] = suggestions_text
+        
+        # Collect improvements and AI recommendations
+        improvements = []
+        ai_recommendations = []
+        
+        for component_name, feedback_obj in detailed_feedback.items():
+            if feedback_obj.suggestions:
+                improvements.extend(feedback_obj.suggestions[:2])  # Top 2 per component
+            
+        # Add form-specific recommendations
+        if sentence_count != 1:
+            ai_recommendations.append("Practice combining multiple ideas into a single, well-structured sentence")
+        if word_count < 50:
+            ai_recommendations.append("Aim for 50-70 words to fully capture the key points")
+        elif word_count > 70:
+            ai_recommendations.append("Try to be more concise while maintaining all key information")
+        
+        # Overall feedback
+        overall_feedback = f"SST Summary: {total_score:.1f}/10 ({percentage}% - {band}). "
+        if sentence_count == 1:
+            overall_feedback += "Good form structure. "
+        else:
+            overall_feedback += f"Form issue: {sentence_count} sentences (need 1). "
+        
+        if spelling_score == 2.0:
+            overall_feedback += "Excellent spelling. "
+        elif spelling_score >= 1.0:
+            overall_feedback += "Minor spelling issues. "
+        else:
+            overall_feedback += "Multiple spelling errors need attention. "
+        
+        return SummarizeSpokenTextResponse(
+            success=True,
+            scores={
+                "grammar": grammar_score,
+                "vocabulary": vocabulary_score,
+                "content": content_score,
+                "form": form_score,
+                "spelling": spelling_score
+            },
+            feedback=feedback_dict,
+            detailed_feedback=detailed_feedback,
+            overall_feedback=overall_feedback,
+            total_score=total_score,
+            percentage=percentage,
+            band=band,
+            word_count=word_count,
+            sentence_count=sentence_count,
+            improvements=improvements,
+            ai_recommendations=ai_recommendations
+        )
+        
+    except ImportError:
+        raise HTTPException(status_code=503, detail="4-layer hybrid scorer not available")
+    except Exception as e:
+        print(f"SST scoring failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Test GPT spelling detection endpoint
