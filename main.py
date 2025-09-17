@@ -837,6 +837,94 @@ async def score_write_essay(
         print(f"Essay Scoring Error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
+# ULTIMATE Write Essay endpoint - SWT-style precision
+@app.post("/api/v1/writing/essay/ultimate")
+async def score_ultimate_write_essay_endpoint(
+    question_title: str = Form(...),
+    essay_prompt: str = Form(...),
+    essay_type: str = Form(...),
+    key_arguments: str = Form(...),
+    sample_essay: str = Form(default=""),
+    user_essay: str = Form(...)
+):
+    """
+    ULTIMATE Write Essay scoring with SWT-style precision
+    
+    Features:
+    - Ultra-comprehensive spelling detection (catches "strickly" etc.)
+    - Decimal precision scoring (1.8/2, 3.4/6 like APEUni) 
+    - GPT as ultimate 100+ point English validator
+    - ML error cross-validation and reclassification
+    - SWT-style comprehensive final verification
+    """
+    try:
+        # Validate input
+        if not user_essay or len(user_essay.strip()) < 50:
+            raise HTTPException(status_code=400, detail="Essay too short (minimum 50 characters)")
+        
+        word_count = len(user_essay.split())
+        if word_count < 150:
+            raise HTTPException(status_code=400, detail=f"Essay too short: {word_count} words (minimum 150)")
+        
+        # Try ultimate scorer
+        try:
+            from app.services.scoring.ultimate_write_essay_scorer import score_ultimate_write_essay
+            
+            print("🎯 Starting ULTIMATE Write Essay Scoring")
+            result = score_ultimate_write_essay(user_essay, essay_prompt)
+            
+            if not result.get("success"):
+                raise Exception(f"Ultimate scoring failed: {result.get('error', 'Unknown error')}")
+            
+            print(f"✅ Ultimate scoring completed with total score: {result.get('total_score', 0)}/26")
+            return result
+            
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Ultimate scorer not available")
+        except Exception as e:
+            print(f"Ultimate scorer error: {e}")
+            raise HTTPException(status_code=500, detail=f"Ultimate scoring error: {str(e)}")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Ultimate essay scoring failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+# Test spelling detection endpoint
+@app.post("/api/v1/writing/test-spelling")
+async def test_spelling_detection_endpoint(test_text: str = Form(...)):
+    """
+    Test endpoint for ultra-comprehensive spelling detection
+    """
+    try:
+        from app.services.scoring.ultimate_write_essay_scorer import get_ultimate_essay_scorer
+        
+        scorer = get_ultimate_essay_scorer()
+        spelling_score, spelling_errors = scorer.ultra_spelling_check(test_text)
+        
+        return {
+            "success": True,
+            "text_analyzed": test_text,
+            "spelling_score": f"{spelling_score.raw_score}/{spelling_score.max_score}",
+            "errors_found": len(spelling_errors),
+            "errors": [
+                {
+                    "error": err.error_text,
+                    "correction": err.correction,
+                    "rule": err.rule_violated,
+                    "confidence": err.confidence
+                } for err in spelling_errors
+            ],
+            "database_size": len(scorer.spelling_errors_database)
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Ultimate scorer not available")
+    except Exception as e:
+        print(f"Spelling test failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     import ssl
