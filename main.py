@@ -895,6 +895,16 @@ async def score_write_essay(
             feedback.suggestions = clean_unicode_text(feedback.suggestions)
             feedback.justification = clean_unicode_text(feedback.justification)
         
+        # Convert detailed_feedback to dictionary format for the frontend
+        feedback_dict = {}
+        for component_name, feedback_obj in detailed_feedback.items():
+            feedback_dict[component_name] = {
+                "score": feedback_obj.score,
+                "justification": feedback_obj.justification,
+                "errors": feedback_obj.errors,
+                "suggestions": feedback_obj.suggestions
+            }
+        
         return WriteEssayResponse(
             success=True,
             scores={
@@ -906,7 +916,7 @@ async def score_write_essay(
                 "spelling": spelling_score,
                 "vocabulary": vocabulary_score
             },
-            feedback=feedback,
+            feedback=feedback_dict,
             detailed_feedback=detailed_feedback,
             overall_feedback=analysis.get("verification_notes", f"Your essay scored {total_score}/26."),
             total_score=total_score,
