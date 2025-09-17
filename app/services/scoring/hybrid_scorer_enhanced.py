@@ -512,17 +512,29 @@ class HybridScorer:
         connector_score = self._analyze_logical_connectors(user_summary)
         logger.info(f"  Logical connector score: {connector_score:.2f}")
         
-        # Calculate final content score (more lenient)
-        base_score = similarity_score * 2.0  # Convert to 0-2 scale
-        keyword_penalty = len(keyword_gaps) * 0.1  # Reduced: -0.1 per missing keyword (was 0.2)
-        connector_bonus = connector_score * 0.3  # Increased bonus for good connectors
+        # Calculate content coverage percentage
+        # Combine semantic similarity and keyword coverage for overall percentage
+        keyword_coverage = max(0, 1 - (len(keyword_gaps) * 0.15))  # Each missing keyword reduces coverage by 15%
+        overall_coverage = (similarity_score * 0.7) + (keyword_coverage * 0.3)  # 70% semantic, 30% keyword
+        coverage_percentage = overall_coverage * 100
         
-        # More lenient minimum - if summary captures main idea, give at least 1.0
-        if base_score >= 0.6:  # If decent semantic similarity
-            content_score = max(1.0, min(2.0, base_score - keyword_penalty + connector_bonus))
-        else:
-            content_score = max(0.0, min(2.0, base_score - keyword_penalty + connector_bonus))
+        # Apply lenient percentage-based scoring as requested
+        if coverage_percentage >= 50:  # 50-60%+ coverage → full marks
+            content_score = 2.0
+        elif coverage_percentage >= 40:  # 40-50% coverage → 1.5
+            content_score = 1.5
+        elif coverage_percentage >= 30:  # 30-40% coverage → 1.0
+            content_score = 1.0
+        elif coverage_percentage >= 25:  # 25-30% coverage → 0.5
+            content_score = 0.5
+        else:  # <25% coverage → 0.0
+            content_score = 0.0
         
+        # Small bonus for good logical connectors (max +0.2)
+        connector_bonus = min(0.2, connector_score * 0.2)
+        content_score = min(2.0, content_score + connector_bonus)
+        
+        logger.info(f"  Content coverage: {coverage_percentage:.1f}%")
         logger.info(f"  Content Score: {content_score}/2.0")
         return round(content_score, 1), keyword_gaps
     
