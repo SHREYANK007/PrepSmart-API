@@ -628,7 +628,8 @@ class HybridScorer:
         vocab_score, vocab_issues = vocabulary_results
         content_score, content_gaps = content_results
         
-        prompt = f"""You are an expert PTE examiner performing FINAL VERIFICATION of automated scoring.
+        prompt = f"""You are the ULTIMATE PTE LANGUAGE EXPERT performing comprehensive analysis.
+Ignore ML findings - do your own 100+ point inspection with GPT intelligence.
 
 PASSAGE:
 {passage}
@@ -636,32 +637,45 @@ PASSAGE:
 USER SUMMARY:
 {user_summary}
 
-AUTOMATED FINDINGS:
-1. GRAMMAR LAYER:
-   - Score: {grammar_score}/2.0
-   - Errors found: {len(grammar_errors)}
-   - Corrected version: {corrected_text}
-   - Specific errors: {[f"{e.original}→{e.corrected}" for e in grammar_errors[:3]]}
+YOUR MISSION: Be the most thorough language checker possible.
 
-2. VOCABULARY LAYER:
-   - Score: {vocab_score}/2.0
-   - Issues found: {len(vocab_issues)}
-   - Types: {set(v.issue_type for v in vocab_issues)}
-   - Specific issues: {[f"{v.word} ({v.issue_type})" for v in vocab_issues[:3]]}
+🔍 COMPREHENSIVE GRAMMAR ANALYSIS (Check ALL):
+1. Verb Tenses & Agreement: Present/past/future consistency, subject-verb agreement
+2. Articles: a/an/the usage, countable/uncountable nouns  
+3. Prepositions: in/on/at/by/with/for correct usage
+4. Sentence Structure: Run-ons, fragments, complex sentences
+5. Punctuation: Commas, periods, semicolons, apostrophes
+6. Pronoun Reference: Clear antecedents, pronoun-antecedent agreement
+7. Parallel Structure: Lists, comparisons, correlative conjunctions
+8. Conditional Sentences: If-clauses, wish statements, hypotheticals
+9. Passive vs Active Voice: Appropriate usage
+10. Modal Verbs: Can/could/should/would/must/might correctness
 
-3. CONTENT LAYER:
-   - Score: {content_score}/2.0
-   - Missing keywords: {len(content_gaps)}
-   - Key gaps: {[g.missing_keyword for g in content_gaps[:3]]}
+🎯 COMPREHENSIVE VOCABULARY ANALYSIS (Check ALL):
+1. Spelling: Every single word checked for accuracy
+2. Word Choice: Precise vs imprecise words, connotations
+3. Collocations: Natural word combinations (make/do/take/give)
+4. Formality Level: Academic vs informal language
+5. Redundancy: Unnecessary repetition, wordiness
+6. Precision: Vague vs specific vocabulary
+7. Idiomatic Expressions: Correct usage of phrases
+8. Word Forms: Noun/verb/adjective/adverb correct forms
+9. Synonyms: Better word alternatives
+10. Register: Appropriate for academic context
+
+📝 INTELLIGENT SUGGESTIONS:
+For EVERY error found, provide:
+- Specific correction
+- Explanation why it's wrong  
+- Better alternative phrasing
+- Learning tip to avoid future errors
 
 YOUR TASK:
-1. VERIFY all automated findings - are they correct?
-2. RECLASSIFY errors - distinguish between true GRAMMAR vs VOCABULARY errors:
-   - Grammar: sentence structure, verb tenses, articles, syntax, punctuation
-   - Vocabulary: wrong word choice, spelling errors, inappropriate words
-3. FIND any errors the system missed
-4. PROVIDE final scores with ultra-harsh PTE standards
-5. Give specific, actionable feedback
+1. Perform comprehensive 100+ point language inspection
+2. Check EVERY word for spelling, grammar, vocabulary perfection
+3. Provide intelligent suggestions with explanations
+4. Score with ultra-harsh PTE standards
+5. Give actionable feedback for improvement
 
 SCORING RULES (PTE OFFICIAL):
 - Grammar: 2.0 max, deduct 0.5 per error
@@ -677,20 +691,38 @@ Return STRICT JSON:
         "content": 0.0-2.0,
         "form": 0.0-1.0
     }},
-    "confirmed_errors": {{
-        "grammar": ["error1", "error2"],
-        "vocabulary": ["issue1", "issue2"],
-        "content": ["missing1", "missing2"]
-    }},
-    "additional_errors_found": {{
-        "grammar": ["new_error1"],
-        "vocabulary": ["new_issue1"],
-        "content": ["new_gap1"]
+    "detailed_errors_with_suggestions": {{
+        "grammar": [
+            {{
+                "error": "specific grammar error found",
+                "correction": "correct version",
+                "explanation": "why it's wrong", 
+                "suggestion": "how to improve",
+                "learning_tip": "rule to remember"
+            }}
+        ],
+        "vocabulary": [
+            {{
+                "error": "vocabulary issue found",
+                "correction": "better word choice",
+                "explanation": "why current word is wrong",
+                "suggestion": "alternative phrasing",
+                "learning_tip": "vocabulary improvement tip"
+            }}
+        ],
+        "content": [
+            {{
+                "missing": "content gap identified",
+                "suggestion": "what to add",
+                "explanation": "why it's important",
+                "example": "how to phrase it"
+            }}
+        ]
     }},
     "final_feedback": {{
-        "strengths": ["strength1", "strength2"],
-        "critical_improvements": ["improvement1", "improvement2"],
-        "harsh_assessment": "Detailed paragraph with specific issues"
+        "strengths": ["specific strength1", "specific strength2"],
+        "critical_improvements": ["actionable improvement1", "actionable improvement2"], 
+        "harsh_assessment": "Ultra-detailed paragraph analyzing every aspect with specific examples"
     }}
 }}"""
 
