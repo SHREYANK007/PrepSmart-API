@@ -596,7 +596,7 @@ async def score_summarize_written_text(
             },
             feedback=feedback,
             detailed_feedback=detailed_feedback,
-            overall_feedback=analysis.get("overall_assessment", f"Your summary scored {total_score}/7."),
+            overall_feedback=analysis.get("harsh_assessment", analysis.get("overall_assessment", f"Your summary scored {total_score}/7.")),
             total_score=total_score,
             percentage=percentage,
             band=band,
@@ -606,9 +606,9 @@ async def score_summarize_written_text(
             vocabulary_errors=analysis.get("vocabulary_errors", []),
             detailed_analysis=analysis.get("detailed_analysis", {}),
             vocabulary_assessment=analysis.get("vocabulary_justification", ""),
-            improvements=analysis.get("priority_improvements", []),
+            improvements=analysis.get("improvements", []),
             strengths=analysis.get("strengths", []),
-            ai_recommendations=analysis.get("priority_improvements", []),
+            ai_recommendations=analysis.get("improvements", []),
             word_count=word_count,
             is_single_sentence=is_single_sentence
         )
