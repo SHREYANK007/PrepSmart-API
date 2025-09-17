@@ -638,140 +638,26 @@ async def score_write_essay(
         if not user_essay.strip():
             raise HTTPException(status_code=400, detail="Essay cannot be empty")
         
-        # Try to use ULTIMATE scorer first for detailed SWT-style feedback
-        try:
-            from app.services.scoring.ultimate_write_essay_scorer import score_ultimate_write_essay
-            
-            print("🎯 Using ULTIMATE Write Essay Scorer for detailed feedback")
-            ultimate_result = score_ultimate_write_essay(user_essay, essay_prompt)
-            
-            if ultimate_result.get("success"):
-                # Transform ultimate result to expected format
-                analysis = {
-                    "success": True,
-                    "scores": ultimate_result.get("scores", {}),
-                    "total_score": ultimate_result.get("total_score", 0),
-                    "percentage": ultimate_result.get("percentage", 0),
-                    "band": ultimate_result.get("band", "Unknown"),
-                    "word_count": ultimate_result.get("word_count", 0),
-                    "paragraph_count": ultimate_result.get("paragraph_count", 0),
-                    
-                    # Enhanced SWT-style feedback
-                    "strengths": ultimate_result.get("strengths", []),
-                    "improvements": ultimate_result.get("improvement_areas", []),
-                    "ai_recommendations": ultimate_result.get("ai_recommendations", []),
-                    "specific_suggestions": ultimate_result.get("specific_suggestions", []),
-                    "error_patterns": ultimate_result.get("error_patterns", []),
-                    "strategic_improvements": ultimate_result.get("strategic_improvements", []),
-                    
-                    # Detailed errors
-                    "errors": ultimate_result.get("errors", {}),
-                    "additional_errors_found": ultimate_result.get("additional_errors_found", []),
-                    
-                    # GPT insights
-                    "swt_style_insights": ultimate_result.get("swt_style_insights", {}),
-                    "gpt_vs_ml_comparison": ultimate_result.get("gpt_vs_ml_comparison", {}),
-                    "verification_notes": ultimate_result.get("verification_notes", "")
-                }
-                print("✅ Ultimate scorer provided detailed SWT-style feedback")
-            else:
-                raise Exception("Ultimate scorer failed, falling back")
-            
-        except Exception as e:
-            print(f"Ultimate scorer failed: {e}, trying 3-layer scorer")
-            # Fallback to 3-layer scorer
-            try:
-                from app.services.scoring.write_essay_scorer import get_essay_scorer
-                essay_scorer = get_essay_scorer()
-                
-                # Use 3-layer scorer
-                analysis = essay_scorer.score_essay(
-                    user_essay=user_essay,
-                    essay_prompt=essay_prompt
-                )
-                
-                # Map to expected format
-                if analysis.get("success"):
-                    scores = analysis["scores"]
-                    suggestions = analysis.get("suggestions", {})
-                    
-                    # Remap scores to match frontend expectations
-                    mapped_analysis = {
-                        "content_score": scores.get("content", 0),
-                        "linguistic_score": scores.get("linguistic", 0),
-                        "coherence_score": scores.get("development", 0),
-                        "form_score": scores.get("form", 0),
-                        "grammar_score": scores.get("grammar", 0),
-                        "spelling_score": scores.get("spelling", 0),
-                        "vocabulary_score": scores.get("vocabulary", 0),
-                        
-                        # Justifications with harsh assessment
-                        "content_justification": analysis.get("component_feedback", {}).get("content", ""),
-                        "linguistic_justification": analysis.get("component_feedback", {}).get("linguistic", ""),
-                    "coherence_justification": analysis.get("component_feedback", {}).get("development", ""),
-                    "form_justification": analysis.get("component_feedback", {}).get("form", ""),
-                    "grammar_justification": analysis.get("component_feedback", {}).get("grammar", ""),
-                    "spelling_justification": analysis.get("component_feedback", {}).get("spelling", ""),
-                    "vocabulary_justification": analysis.get("component_feedback", {}).get("vocabulary", ""),
-                    
-                    # Errors from ML layers
-                    "content_errors": analysis.get("errors", {}).get("content", []),
-                    "linguistic_errors": analysis.get("errors", {}).get("linguistic", []),
-                    "coherence_errors": analysis.get("errors", {}).get("coherence", []),
-                    "form_errors": analysis.get("errors", {}).get("form", []),
-                    "grammar_errors": analysis.get("errors", {}).get("grammar", [])[:10],
-                    "spelling_errors": analysis.get("errors", {}).get("spelling", [])[:5],
-                    "vocabulary_errors": analysis.get("errors", {}).get("vocabulary", [])[:10],
-                    
-                    # GPT suggestions
-                    "content_suggestions": [s.get("suggestion", "") for s in suggestions.get("content", [])] if suggestions.get("content") else ["Address all prompt requirements", "Develop arguments with examples"],
-                    "linguistic_suggestions": ["Vary sentence structures", "Use complex grammatical forms"],
-                    "coherence_suggestions": [s.get("suggestion", "") for s in suggestions.get("coherence", [])] if suggestions.get("coherence") else ["Use discourse markers", "Improve paragraph transitions"],
-                    "form_suggestions": ["Maintain 200-300 words", "Use proper paragraph structure"],
-                    "grammar_suggestions": [s.get("correction", "") for s in suggestions.get("grammar", [])][:5] if suggestions.get("grammar") else ["Review grammar rules"],
-                    "spelling_suggestions": ["Check spelling carefully"],
-                    "vocabulary_suggestions": [s.get("correction", "") for s in suggestions.get("vocabulary", [])][:5] if suggestions.get("vocabulary") else ["Use academic vocabulary"],
-                    
-                    # Overall assessments with detailed recommendations
-                    "overall_assessment": analysis.get("harsh_assessment", f"Your essay scored {analysis['total_score']}/26."),
-                    "strengths": analysis.get("strengths", []),
-                    "priority_improvements": analysis.get("improvements", []),
-                    
-                    # Detailed AI recommendations like SWT
-                    "ai_recommendations": [
-                        f"Content Development: {suggestions.get('content', [{'suggestion': 'Address all aspects of the prompt thoroughly, including counterarguments and challenges'}])[0].get('suggestion', '')}",
-                        f"Grammar Improvement: {suggestions.get('grammar', [{'correction': 'Review subject-verb agreement, article usage, and verb forms'}])[0].get('correction', '')}",
-                        f"Vocabulary Enhancement: {suggestions.get('vocabulary', [{'correction': 'Use more precise academic vocabulary and avoid repetition'}])[0].get('correction', '')}",
-                        f"Coherence & Flow: {suggestions.get('coherence', [{'suggestion': 'Improve transitions between paragraphs and ideas'}])[0].get('suggestion', '')}",
-                        f"Critical Analysis: Consider discussing potential challenges, limitations, and opposing viewpoints to demonstrate deeper understanding",
-                        f"Examples & Evidence: Include specific real-world examples, statistics, or expert opinions to support your arguments",
-                        f"Writing Technique: Vary sentence structures, use complex grammatical forms, and employ sophisticated discourse markers"
-                    ]
-                    }
-                    analysis = mapped_analysis
-                else:
-                    raise Exception("3-layer scorer failed")
-            
-            except Exception as e:
-                print(f"3-layer scorer failed: {e}, falling back to GPT")
-                # Fallback to GPT-4 analysis
-                analysis = await analyze_essay_with_gpt4(
-                    essay_prompt=essay_prompt,
-                    essay_type=essay_type,
-                    key_arguments=key_arguments,
-                    sample_essay=sample_essay,
-                    user_essay=user_essay,
-                    question_title=question_title
-                )
+        # Use Ultimate scorer with ML + GPT independent analysis (NO FALLBACK)
+        from app.services.scoring.ultimate_write_essay_scorer import score_ultimate_write_essay
         
-        # Extract scores and calculate totals
-        content_score = analysis.get("content_score", 0)
-        linguistic_score = analysis.get("linguistic_score", 0)
-        coherence_score = analysis.get("coherence_score", 0)
-        form_score = analysis.get("form_score", 0)
-        grammar_score = analysis.get("grammar_score", 0)
-        spelling_score = analysis.get("spelling_score", 0)
-        vocabulary_score = analysis.get("vocabulary_score", 0)
+        print("ULTIMATE: Starting ML + GPT independent analysis workflow")
+        analysis = score_ultimate_write_essay(user_essay, essay_prompt)
+        
+        if not analysis.get("success"):
+            raise HTTPException(status_code=500, detail=f"Ultimate scorer failed: {analysis.get('error', 'ML+GPT analysis failed')}")
+        
+        print(f"ULTIMATE: ML+GPT analysis completed with total: {analysis.get('total_score', 0)}/26")
+        
+        # Extract scores from Ultimate scorer ML+GPT analysis
+        scores = analysis["scores"]
+        content_score = scores.get("content", 0)
+        linguistic_score = scores.get("linguistic", 0)
+        coherence_score = scores.get("development", 0)  # Ultimate uses "development"
+        form_score = scores.get("form", 0)
+        grammar_score = scores.get("grammar", 0)
+        spelling_score = scores.get("spelling", 0)
+        vocabulary_score = scores.get("vocabulary", 0)
         
         total_score = round(content_score + linguistic_score + coherence_score + 
                           form_score + grammar_score + spelling_score + vocabulary_score, 1)
@@ -789,49 +675,52 @@ async def score_write_essay(
         else:
             band = "Needs Improvement"
         
-        # Build detailed feedback
+        # Build detailed feedback from Ultimate scorer ML+GPT analysis
+        comp_scores = analysis["component_scores"]
+        errors_dict = analysis.get("errors", {})
+        
         detailed_feedback = {
             "content": EssayFeedback(
-                score=analysis.get("content_score", 0),
-                justification=analysis.get("content_justification", ""),
-                errors=analysis.get("content_errors", []),
-                suggestions=analysis.get("content_suggestions", [])
+                score=content_score,
+                justification=comp_scores.get("content", f"Content: {content_score}/6"),
+                errors=errors_dict.get("content", []),
+                suggestions=analysis.get("detailed_feedback", {}).get("content_improvements", [])
             ),
             "linguistic": EssayFeedback(
-                score=analysis.get("linguistic_score", 0),
-                justification=analysis.get("linguistic_justification", ""),
-                errors=analysis.get("linguistic_errors", []),
-                suggestions=analysis.get("linguistic_suggestions", [])
+                score=linguistic_score,
+                justification=comp_scores.get("linguistic", f"Linguistic Range: {linguistic_score}/6"),
+                errors=errors_dict.get("linguistic", []),
+                suggestions=analysis.get("detailed_feedback", {}).get("linguistic_improvements", [])
             ),
             "coherence": EssayFeedback(
-                score=analysis.get("coherence_score", 0),
-                justification=analysis.get("coherence_justification", ""),
-                errors=analysis.get("coherence_errors", []),
-                suggestions=analysis.get("coherence_suggestions", [])
+                score=coherence_score,
+                justification=comp_scores.get("development", f"Development: {coherence_score}/6"),
+                errors=errors_dict.get("development", []),
+                suggestions=analysis.get("detailed_feedback", {}).get("development_improvements", [])
             ),
             "form": EssayFeedback(
-                score=analysis.get("form_score", 0),
-                justification=analysis.get("form_justification", ""),
-                errors=analysis.get("form_errors", []),
-                suggestions=analysis.get("form_suggestions", [])
+                score=form_score,
+                justification=comp_scores.get("form", f"Form: {form_score}/2"),
+                errors=errors_dict.get("form", []),
+                suggestions=[]
             ),
             "grammar": EssayFeedback(
-                score=analysis.get("grammar_score", 0),
-                justification=analysis.get("grammar_justification", ""),
-                errors=analysis.get("grammar_errors", []),
-                suggestions=analysis.get("grammar_suggestions", [])
+                score=grammar_score,
+                justification=comp_scores.get("grammar", f"Grammar: {grammar_score}/2"),
+                errors=errors_dict.get("grammar", []),
+                suggestions=analysis.get("detailed_feedback", {}).get("grammar_improvements", [])
             ),
             "spelling": EssayFeedback(
-                score=analysis.get("spelling_score", 0),
-                justification=analysis.get("spelling_justification", ""),
-                errors=analysis.get("spelling_errors", []),
-                suggestions=analysis.get("spelling_suggestions", [])
+                score=spelling_score,
+                justification=comp_scores.get("spelling", f"Spelling: {spelling_score}/2"),
+                errors=errors_dict.get("spelling", []),
+                suggestions=["Check spelling carefully"]
             ),
             "vocabulary": EssayFeedback(
-                score=analysis.get("vocabulary_score", 0),
-                justification=analysis.get("vocabulary_justification", ""),
-                errors=analysis.get("vocabulary_errors", []),
-                suggestions=analysis.get("vocabulary_suggestions", [])
+                score=vocabulary_score,
+                justification=comp_scores.get("vocabulary", f"Vocabulary: {vocabulary_score}/2"),
+                errors=errors_dict.get("vocabulary", []),
+                suggestions=analysis.get("detailed_feedback", {}).get("vocabulary_improvements", [])
             )
         }
         
