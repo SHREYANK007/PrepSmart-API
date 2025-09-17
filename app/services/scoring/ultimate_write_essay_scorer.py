@@ -686,81 +686,106 @@ DETECTED ERRORS:
 
 🔍 ULTIMATE 100+ POINT ENGLISH INSPECTION + SWT-STYLE ANALYSIS REQUIRED:
 
-YOUR TASK: Act as FINAL VALIDATOR with comprehensive SWT-style insights. Check EVERY aspect of English:
+YOUR TASK: Act as INDEPENDENT EXAMINER - Check ALL 7 components yourself, then compare with ML results:
 
-CRITICAL: IGNORE ML RESULTS FOR SPELLING - DO YOUR OWN ANALYSIS
+CRITICAL: DO YOUR OWN COMPLETE ANALYSIS OF ALL 7 COMPONENTS - Don't just review ML results
 
-1. SPELLING (100% accuracy required - FIND ALL ERRORS YOURSELF):
-   - Read the essay word by word and check EVERY single word for spelling
-   - Look for common misspellings: strickly→strictly, recieve→receive, seperate→separate
-   - Pay special attention to adverbs ending in -ly (strickly, definatly, immediatly)
-   - Check academic misspellings: arguement→argument, occured→occurred
-   - Check technology terms: tecnology→technology, sofware→software
-   - Check doubled letters: accomodate→accommodate, embarass→embarrass
-   - Check -ence/-ance endings: independance→independence, existance→existence
-   - FIND EVERY SPELLING ERROR - don't rely on ML system
-   
-2. GRAMMAR (50+ rules):
-   - Articles (a/an/the)
-   - Subject-verb agreement
-   - Tense consistency  
-   - Prepositions
-   - Pronouns and antecedents
-   - Sentence fragments
-   - Run-on sentences
-   - Comma splices
-   - Parallel structure
-   - Conditional sentences
-   - Passive voice appropriateness
-   - Modal verbs
-   - Gerunds vs infinitives
-   
-3. VOCABULARY & COLLOCATIONS:
-   - Academic vocabulary appropriateness
-   - Collocation accuracy (make research → conduct research)
-   - Word choice precision
-   - Register consistency
-   - Avoiding repetition
-   
-4. CONTENT & STRUCTURE:
-   - Direct prompt addressing
-   - Argument development
-   - Evidence and examples
-   - Paragraph unity
-   - Logical flow
-   - Introduction and conclusion effectiveness
-   
-5. LINGUISTIC RANGE:
-   - Sentence variety (simple, compound, complex)
-   - Subordination and coordination
-   - Advanced structures
-   - Discourse markers
-   - Cohesive devices
+1. CONTENT (0-6 points) - YOUR INDEPENDENT ANALYSIS:
+   - Does the essay fully address the prompt? What aspects are covered/missing?
+   - Are arguments well-developed with supporting evidence and examples?
+   - Is the response persuasive and relevant to the topic?
+   - Rate 0-6 based on Pearson criteria with decimal precision (e.g., 4.2, 5.7)
 
-6. FORM:
-   - Word count (200-300 strict)
-   - Paragraph structure
-   - Essay format
+2. FORM (0-2 points) - YOUR INDEPENDENT CHECK:
+   - Count exact words (must be 200-300 for score of 2)
+   - Check paragraph structure and essay format
+   - Rate with decimal precision (e.g., 1.8, 1.5, 1.0)
 
-SCORING + SWT-STYLE COMPREHENSIVE ANALYSIS:
-- Use DECIMAL precision like APEUni (1.8/2, 3.4/6, 4.2/6)
-- CRITICAL: Do your OWN spelling analysis - don't trust ML results
-- If you find spelling errors that ML missed, include them in "additional_errors_found"
-- Cross-validate ML error classifications
-- Be as strict as SWT system in error detection
-- Provide detailed SWT-style insights, suggestions, and recommendations
-- Include specific improvement strategies and AI-powered recommendations
+3. DEVELOPMENT/COHERENCE (0-6 points) - YOUR INDEPENDENT ANALYSIS:
+   - Is there logical structure and smooth flow?
+   - Are ideas organized cohesively with clear paragraphs?
+   - Are discourse markers used effectively?
+   - Rate 0-6 with decimal precision (e.g., 4.8, 5.3)
 
-SPELLING INSTRUCTION: Look at each word in the essay individually:
-- If you see "strickly" → mark as error: {"error": "strickly", "correction": "strictly", "type": "spelling"}
-- If you see "recieve" → mark as error: {"error": "recieve", "correction": "receive", "type": "spelling"}
-- If you see "seperate" → mark as error: {"error": "seperate", "correction": "separate", "type": "spelling"}
-- Check EVERY word - don't assume ML found everything
+4. GRAMMAR (0-2 points) - YOUR INDEPENDENT CHECK:
+   - Find ALL grammar errors: articles, subject-verb agreement, tenses
+   - Check sentence fragments, run-ons, comma splices
+   - Assess parallel structure, conditionals, modals
+   - Rate with decimal precision based on error count and severity
 
-Return EXACT JSON with SWT-style comprehensive analysis:
+5. LINGUISTIC RANGE (0-6 points) - YOUR INDEPENDENT ANALYSIS:
+   - Assess sentence variety (simple, compound, complex)
+   - Check subordination, coordination, advanced structures
+   - Evaluate use of discourse markers and cohesive devices
+   - Rate 0-6 with decimal precision
+
+6. VOCABULARY (0-2 points) - YOUR INDEPENDENT CHECK:
+   - Check word choice appropriateness and precision
+   - Find collocation errors (make research → conduct research)
+   - Assess academic vocabulary usage and register consistency
+   - Rate with decimal precision
+
+7. SPELLING (0-2 points) - YOUR INDEPENDENT CHECK:
+   - Read word by word - find ALL spelling errors yourself
+   - Common errors: strickly→strictly, recieve→receive, seperate→separate
+   - Academic terms: arguement→argument, occured→occurred
+   - Technology: tecnology→technology, sofware→software
+   - Rate with decimal precision based on error count
+
+SCORING METHODOLOGY - INDEPENDENT ANALYSIS + ML COMPARISON:
+
+STEP 1: YOUR INDEPENDENT SCORING (Primary):
+- Analyze the essay completely independently 
+- Score all 7 components with decimal precision like Pearson (1.8/2, 4.2/6, 5.7/6)
+- Use official Pearson PTE scoring criteria
+- Be as strict as human SWT examiners
+
+STEP 2: ML COMPARISON (Secondary):
+- Compare your scores with ML results provided above
+- If ML found errors you missed, add them to your analysis
+- If you found errors ML missed, include in "additional_errors_found"
+- Cross-validate error classifications between systems
+
+STEP 3: FINAL SCORING DECISION:
+- Use the MORE ACCURATE score between your analysis and ML
+- If both systems agree, confirm the score
+- If they differ significantly, use the stricter/more accurate one
+- Provide reasoning for any major score adjustments
+
+DECIMAL SCORING EXAMPLES (Use Pearson-style precision):
+- Content: 4.2/6 (addresses most points but lacks depth in 2 areas)
+- Grammar: 1.7/2 (3 minor errors that don't hinder communication)
+- Spelling: 1.8/2 (1 spelling error found)
+- Vocabulary: 1.5/2 (good range but 2 imprecise word choices)
+- Linguistic: 4.8/6 (excellent variety with minor repetition)
+- Development: 5.3/6 (strong structure, minor transition issues)
+- Form: 2.0/2 (245 words, proper paragraphs)
+
+Return EXACT JSON with independent analysis + ML comparison:
 {{
     "success": true,
     "verification_status": "confirmed|adjusted|major_corrections",
+    
+    "gpt_independent_scores": {{
+        "content": <0.0-6.0>,
+        "form": <0.0-2.0>,
+        "development": <0.0-6.0>,
+        "grammar": <0.0-2.0>,
+        "linguistic": <0.0-6.0>,
+        "vocabulary": <0.0-2.0>,
+        "spelling": <0.0-2.0>
+    }},
+    
+    "gpt_vs_ml_comparison": {{
+        "content": "GPT: 4.2, ML: 3.8 - GPT score used (better argument analysis)",
+        "form": "GPT: 2.0, ML: 2.0 - Scores match",
+        "development": "GPT: 5.3, ML: 4.9 - GPT score used (better coherence assessment)",
+        "grammar": "GPT: 1.7, ML: 1.5 - GPT score used (found additional errors)",
+        "linguistic": "GPT: 4.8, ML: 4.2 - GPT score used (better variety assessment)",
+        "vocabulary": "GPT: 1.5, ML: 1.8 - GPT score used (found collocation errors)",
+        "spelling": "GPT: 1.8, ML: 2.0 - GPT score used (found spelling error ML missed)"
+    }},
+    
     "final_scores": {{
         "content": <0.0-6.0>,
         "form": <0.0-2.0>,
@@ -770,15 +795,17 @@ Return EXACT JSON with SWT-style comprehensive analysis:
         "vocabulary": <0.0-2.0>,
         "spelling": <0.0-2.0>
     }},
+    
     "additional_errors_found": [
         {{
-            "error": "exact error text",
-            "type": "spelling|grammar|vocabulary",
+            "error": "exact error text from YOUR analysis",
+            "type": "spelling|grammar|vocabulary|content",
             "correction": "correct version",
             "rule": "rule violated",
             "severity": "high|medium|low"
         }}
     ],
+    
     "ml_error_reclassifications": [
         {{
             "original_type": "grammar",
@@ -786,10 +813,12 @@ Return EXACT JSON with SWT-style comprehensive analysis:
             "reason": "Actually a collocation error"
         }}
     ],
+    
     "detailed_feedback": {{
-        "critical_issues": ["issue 1", "issue 2"],
-        "ml_accuracy": "ML missed X spelling errors",
-        "overall_assessment": "Brief overall assessment"
+        "critical_issues": ["List actual issues YOU found"],
+        "gpt_vs_ml_analysis": "YOUR independent analysis found X additional errors",
+        "scoring_reasoning": "Explanation of why you chose certain scores",
+        "overall_assessment": "Brief overall assessment based on YOUR analysis"
     }},
     "swt_style_insights": {{
         "strengths": ["ANALYZE THE ACTUAL ESSAY AND LIST 3-5 REAL STRENGTHS"],
@@ -882,13 +911,17 @@ Return EXACT JSON with SWT-style comprehensive analysis:
             # Step 4: Ultimate GPT verification (like SWT)
             gpt_result = self.ultimate_gpt_final_verification(essay_prompt, user_essay, ml_results)
             
-            # Step 5: Finalize scores (GPT overrides if better)
+            # Step 5: Finalize scores (GPT independent analysis + ML comparison)
             if gpt_result.get("success") and "final_scores" in gpt_result:
+                # Use GPT's final scores (result of independent analysis + ML comparison)
                 final_scores = gpt_result["final_scores"]
-                verification_notes = f"GPT {gpt_result.get('verification_status', 'verified')}"
+                gpt_independent_scores = gpt_result.get("gpt_independent_scores", {})
+                gpt_vs_ml_comparison = gpt_result.get("gpt_vs_ml_comparison", {})
+                verification_notes = f"GPT Independent Analysis + ML Comparison: {gpt_result.get('verification_status', 'verified')}"
                 additional_errors = gpt_result.get("additional_errors_found", [])
                 swt_insights = gpt_result.get("swt_style_insights", {})
             else:
+                # Fallback to ML scores only
                 final_scores = {
                     'content': content_score.raw_score,
                     'form': form_score.raw_score,
@@ -898,7 +931,9 @@ Return EXACT JSON with SWT-style comprehensive analysis:
                     'vocabulary': vocabulary_score.raw_score,
                     'spelling': spelling_score.raw_score
                 }
-                verification_notes = "ML scores (GPT unavailable)"
+                gpt_independent_scores = {}
+                gpt_vs_ml_comparison = {}
+                verification_notes = "ML scores only (GPT unavailable)"
                 additional_errors = []
                 swt_insights = {}
             
@@ -952,7 +987,9 @@ Return EXACT JSON with SWT-style comprehensive analysis:
                     "form": form_issues
                 },
                 
-                # GPT enhancements
+                # GPT Independent Analysis & Comparison
+                "gpt_independent_scores": gpt_independent_scores,
+                "gpt_vs_ml_comparison": gpt_vs_ml_comparison,
                 "additional_errors_found": additional_errors,
                 "ml_error_reclassifications": gpt_result.get("ml_error_reclassifications", []),
                 
