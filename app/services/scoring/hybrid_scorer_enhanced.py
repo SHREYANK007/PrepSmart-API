@@ -795,8 +795,10 @@ Return STRICT JSON:
                 final_scores = gpt_verification["verified_scores"]
                 additional_errors = gpt_verification.get("additional_errors_found", {})
                 final_feedback = gpt_verification.get("final_feedback", {})
+                logger.info("✅ Using GPT-verified scores")
             else:
                 # Use automated scores
+                logger.warning(f"❌ GPT verification failed: {gpt_verification.get('reason', 'Unknown')}")
                 final_scores = {
                     "grammar": grammar_results[0],
                     "vocabulary": vocabulary_results[0],
