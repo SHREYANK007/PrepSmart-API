@@ -954,5 +954,18 @@ Return STRICT JSON:
         }
 
 
-# Create global instance
-enhanced_hybrid_scorer = HybridScorer()
+# Lazy initialization to ensure environment variables are loaded
+class LazyHybridScorer:
+    def __init__(self):
+        self._instance = None
+    
+    def _get_instance(self):
+        if self._instance is None:
+            self._instance = HybridScorer()
+        return self._instance
+    
+    def __getattr__(self, name):
+        return getattr(self._get_instance(), name)
+
+# Create lazy instance
+enhanced_hybrid_scorer = LazyHybridScorer()
