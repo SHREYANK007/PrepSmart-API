@@ -689,25 +689,25 @@ async def score_write_essay(
                     user_essay=user_essay,
                     essay_prompt=essay_prompt
                 )
-            
-            # Map to expected format
-            if analysis.get("success"):
-                scores = analysis["scores"]
-                suggestions = analysis.get("suggestions", {})
                 
-                # Remap scores to match frontend expectations
-                mapped_analysis = {
-                    "content_score": scores.get("content", 0),
-                    "linguistic_score": scores.get("linguistic", 0),
-                    "coherence_score": scores.get("development", 0),
-                    "form_score": scores.get("form", 0),
-                    "grammar_score": scores.get("grammar", 0),
-                    "spelling_score": scores.get("spelling", 0),
-                    "vocabulary_score": scores.get("vocabulary", 0),
+                # Map to expected format
+                if analysis.get("success"):
+                    scores = analysis["scores"]
+                    suggestions = analysis.get("suggestions", {})
                     
-                    # Justifications with harsh assessment
-                    "content_justification": analysis.get("component_feedback", {}).get("content", ""),
-                    "linguistic_justification": analysis.get("component_feedback", {}).get("linguistic", ""),
+                    # Remap scores to match frontend expectations
+                    mapped_analysis = {
+                        "content_score": scores.get("content", 0),
+                        "linguistic_score": scores.get("linguistic", 0),
+                        "coherence_score": scores.get("development", 0),
+                        "form_score": scores.get("form", 0),
+                        "grammar_score": scores.get("grammar", 0),
+                        "spelling_score": scores.get("spelling", 0),
+                        "vocabulary_score": scores.get("vocabulary", 0),
+                        
+                        # Justifications with harsh assessment
+                        "content_justification": analysis.get("component_feedback", {}).get("content", ""),
+                        "linguistic_justification": analysis.get("component_feedback", {}).get("linguistic", ""),
                     "coherence_justification": analysis.get("component_feedback", {}).get("development", ""),
                     "form_justification": analysis.get("component_feedback", {}).get("form", ""),
                     "grammar_justification": analysis.get("component_feedback", {}).get("grammar", ""),
@@ -747,22 +747,22 @@ async def score_write_essay(
                         f"Examples & Evidence: Include specific real-world examples, statistics, or expert opinions to support your arguments",
                         f"Writing Technique: Vary sentence structures, use complex grammatical forms, and employ sophisticated discourse markers"
                     ]
-                }
-                analysis = mapped_analysis
-            else:
-                raise Exception("3-layer scorer failed")
-                
-        except Exception as e:
-            print(f"3-layer scorer failed: {e}, falling back to GPT")
-            # Fallback to GPT-4 analysis
-            analysis = await analyze_essay_with_gpt4(
-                essay_prompt=essay_prompt,
-                essay_type=essay_type,
-                key_arguments=key_arguments,
-                sample_essay=sample_essay,
-                user_essay=user_essay,
-                question_title=question_title
-            )
+                    }
+                    analysis = mapped_analysis
+                else:
+                    raise Exception("3-layer scorer failed")
+            
+            except Exception as e:
+                print(f"3-layer scorer failed: {e}, falling back to GPT")
+                # Fallback to GPT-4 analysis
+                analysis = await analyze_essay_with_gpt4(
+                    essay_prompt=essay_prompt,
+                    essay_type=essay_type,
+                    key_arguments=key_arguments,
+                    sample_essay=sample_essay,
+                    user_essay=user_essay,
+                    question_title=question_title
+                )
         
         # Extract scores and calculate totals
         content_score = analysis.get("content_score", 0)
