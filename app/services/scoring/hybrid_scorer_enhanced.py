@@ -156,6 +156,7 @@ class HybridScorer:
             r'\bmake\s+(a\s+)?photo\b': 'take a photo',
             r'\bgive\s+(an?\s+)?advice\b': 'give advice (no article)',
             r'\bdo\s+(a\s+)?progress\b': 'make progress',
+            r'\bdeal\s+gratification\b': 'delay gratification',  # Common word choice error
         }
         
         # Common misspellings database
@@ -170,6 +171,7 @@ class HybridScorer:
             'arguement': 'argument', 'judgement': 'judgment', 'acknowledgement': 'acknowledgment',
             'accomodate': 'accommodate', 'embarass': 'embarrass', 'millenium': 'millennium',
             'mispell': 'misspell', 'noticable': 'noticeable', 'paralel': 'parallel',
+            'tempation': 'temptation',  # Added missing spelling error
             'questionaire': 'questionnaire', 'refered': 'referred', 'succesful': 'successful',
             'tommorow': 'tomorrow', 'untill': 'until', 'wellcome': 'welcome'
         }
@@ -510,12 +512,16 @@ class HybridScorer:
         connector_score = self._analyze_logical_connectors(user_summary)
         logger.info(f"  Logical connector score: {connector_score:.2f}")
         
-        # Calculate final content score
+        # Calculate final content score (more lenient)
         base_score = similarity_score * 2.0  # Convert to 0-2 scale
-        keyword_penalty = len(keyword_gaps) * 0.2  # -0.2 per missing keyword
-        connector_bonus = connector_score * 0.2  # Small bonus for good connectors
+        keyword_penalty = len(keyword_gaps) * 0.1  # Reduced: -0.1 per missing keyword (was 0.2)
+        connector_bonus = connector_score * 0.3  # Increased bonus for good connectors
         
-        content_score = max(0.0, min(2.0, base_score - keyword_penalty + connector_bonus))
+        # More lenient minimum - if summary captures main idea, give at least 1.0
+        if base_score >= 0.6:  # If decent semantic similarity
+            content_score = max(1.0, min(2.0, base_score - keyword_penalty + connector_bonus))
+        else:
+            content_score = max(0.0, min(2.0, base_score - keyword_penalty + connector_bonus))
         
         logger.info(f"  Content Score: {content_score}/2.0")
         return round(content_score, 1), keyword_gaps
@@ -650,9 +656,12 @@ AUTOMATED FINDINGS:
 
 YOUR TASK:
 1. VERIFY all automated findings - are they correct?
-2. FIND any errors the system missed
-3. PROVIDE final scores with ultra-harsh PTE standards
-4. Give specific, actionable feedback
+2. RECLASSIFY errors - distinguish between true GRAMMAR vs VOCABULARY errors:
+   - Grammar: sentence structure, verb tenses, articles, syntax, punctuation
+   - Vocabulary: wrong word choice, spelling errors, inappropriate words
+3. FIND any errors the system missed
+4. PROVIDE final scores with ultra-harsh PTE standards
+5. Give specific, actionable feedback
 
 SCORING RULES (PTE OFFICIAL):
 - Grammar: 2.0 max, deduct 0.5 per error
