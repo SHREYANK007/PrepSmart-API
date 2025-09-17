@@ -631,23 +631,86 @@ async def score_write_essay(
     user_essay: str = Form(...)
 ):
     """
-    Score Write Essay using PTE 26-point system
-    Implementation uses writing.essay module
+    Score Write Essay using PTE 26-point system with 3-layer hybrid scorer
     """
     try:
         # Validate input
         if not user_essay.strip():
             raise HTTPException(status_code=400, detail="Essay cannot be empty")
         
-        # Get GPT-4 analysis
-        analysis = await analyze_essay_with_gpt4(
-            essay_prompt=essay_prompt,
-            essay_type=essay_type,
-            key_arguments=key_arguments,
-            sample_essay=sample_essay,
-            user_essay=user_essay,
-            question_title=question_title
-        )
+        # Try to use 3-layer scorer first
+        try:
+            from app.services.scoring.write_essay_scorer import get_essay_scorer
+            essay_scorer = get_essay_scorer()
+            
+            # Use 3-layer scorer
+            analysis = essay_scorer.score_essay(
+                user_essay=user_essay,
+                essay_prompt=essay_prompt
+            )
+            
+            # Map to expected format
+            if analysis.get("success"):
+                scores = analysis["scores"]
+                suggestions = analysis.get("suggestions", {})
+                
+                # Remap scores to match frontend expectations
+                mapped_analysis = {
+                    "content_score": scores.get("content", 0),
+                    "linguistic_score": scores.get("linguistic", 0),
+                    "coherence_score": scores.get("development", 0),
+                    "form_score": scores.get("form", 0),
+                    "grammar_score": scores.get("grammar", 0),
+                    "spelling_score": scores.get("spelling", 0),
+                    "vocabulary_score": scores.get("vocabulary", 0),
+                    
+                    # Justifications with harsh assessment
+                    "content_justification": analysis.get("component_feedback", {}).get("content", ""),
+                    "linguistic_justification": analysis.get("component_feedback", {}).get("linguistic", ""),
+                    "coherence_justification": analysis.get("component_feedback", {}).get("development", ""),
+                    "form_justification": analysis.get("component_feedback", {}).get("form", ""),
+                    "grammar_justification": analysis.get("component_feedback", {}).get("grammar", ""),
+                    "spelling_justification": analysis.get("component_feedback", {}).get("spelling", ""),
+                    "vocabulary_justification": analysis.get("component_feedback", {}).get("vocabulary", ""),
+                    
+                    # Errors from ML layers
+                    "content_errors": analysis.get("errors", {}).get("content", []),
+                    "linguistic_errors": analysis.get("errors", {}).get("linguistic", []),
+                    "coherence_errors": analysis.get("errors", {}).get("coherence", []),
+                    "form_errors": analysis.get("errors", {}).get("form", []),
+                    "grammar_errors": analysis.get("errors", {}).get("grammar", [])[:10],
+                    "spelling_errors": analysis.get("errors", {}).get("spelling", [])[:5],
+                    "vocabulary_errors": analysis.get("errors", {}).get("vocabulary", [])[:10],
+                    
+                    # GPT suggestions
+                    "content_suggestions": [s.get("suggestion", "") for s in suggestions.get("content", [])] if suggestions.get("content") else ["Address all prompt requirements", "Develop arguments with examples"],
+                    "linguistic_suggestions": ["Vary sentence structures", "Use complex grammatical forms"],
+                    "coherence_suggestions": [s.get("suggestion", "") for s in suggestions.get("coherence", [])] if suggestions.get("coherence") else ["Use discourse markers", "Improve paragraph transitions"],
+                    "form_suggestions": ["Maintain 200-300 words", "Use proper paragraph structure"],
+                    "grammar_suggestions": [s.get("correction", "") for s in suggestions.get("grammar", [])][:5] if suggestions.get("grammar") else ["Review grammar rules"],
+                    "spelling_suggestions": ["Check spelling carefully"],
+                    "vocabulary_suggestions": [s.get("correction", "") for s in suggestions.get("vocabulary", [])][:5] if suggestions.get("vocabulary") else ["Use academic vocabulary"],
+                    
+                    # Overall assessments
+                    "overall_assessment": analysis.get("harsh_assessment", f"Your essay scored {analysis['total_score']}/26."),
+                    "strengths": analysis.get("strengths", []),
+                    "priority_improvements": analysis.get("improvements", [])
+                }
+                analysis = mapped_analysis
+            else:
+                raise Exception("3-layer scorer failed")
+                
+        except Exception as e:
+            print(f"3-layer scorer failed: {e}, falling back to GPT")
+            # Fallback to GPT-4 analysis
+            analysis = await analyze_essay_with_gpt4(
+                essay_prompt=essay_prompt,
+                essay_type=essay_type,
+                key_arguments=key_arguments,
+                sample_essay=sample_essay,
+                user_essay=user_essay,
+                question_title=question_title
+            )
         
         # Extract scores and calculate totals
         content_score = analysis.get("content_score", 0)
