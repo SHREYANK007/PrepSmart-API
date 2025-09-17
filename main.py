@@ -895,15 +895,12 @@ async def score_write_essay(
             feedback.suggestions = clean_unicode_text(feedback.suggestions)
             feedback.justification = clean_unicode_text(feedback.justification)
         
-        # Convert detailed_feedback to dictionary format for the frontend
+        # Create simple feedback dict for the suggestions tab (strings only)
         feedback_dict = {}
         for component_name, feedback_obj in detailed_feedback.items():
-            feedback_dict[component_name] = {
-                "score": feedback_obj.score,
-                "justification": feedback_obj.justification,
-                "errors": feedback_obj.errors,
-                "suggestions": feedback_obj.suggestions
-            }
+            # Join suggestions into a single string for the frontend
+            suggestions_text = "; ".join(feedback_obj.suggestions) if feedback_obj.suggestions else f"No specific {component_name} issues found"
+            feedback_dict[component_name] = suggestions_text
         
         return WriteEssayResponse(
             success=True,
