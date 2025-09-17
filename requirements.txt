@@ -35,3 +35,7 @@ jsonschema>=4.0.0
 
 # Additional utilities
 huggingface-hub>=0.15.0
+
+# Write Essay specific requirements
+pyspellchecker>=0.7.0
+lexicalrichness>=0.5.1
