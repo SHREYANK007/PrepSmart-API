@@ -923,9 +923,22 @@ Return STRICT JSON:
                 "improvements": final_feedback.get("critical_improvements", []),
                 "harsh_assessment": final_feedback.get("harsh_assessment", ""),
                 "detailed_suggestions": gpt_verification.get("detailed_errors_with_suggestions", {}),
+                
+                # Add suggestion fields for main.py compatibility
+                "content_suggestions": [err.get("suggestion", "") for err in gpt_verification.get("detailed_errors_with_suggestions", {}).get("content", [])] if gpt_verification.get("success") else [],
+                "form_suggestions": ["Use single sentence structure", "Maintain 5-75 words"] if final_scores['form'] < 1.0 else ["Good form maintained"],
+                "grammar_suggestions": [err.get("suggestion", "") for err in gpt_verification.get("detailed_errors_with_suggestions", {}).get("grammar", [])] if gpt_verification.get("success") else [],
+                "vocabulary_suggestions": [err.get("suggestion", "") for err in gpt_verification.get("detailed_errors_with_suggestions", {}).get("vocabulary", [])] if gpt_verification.get("success") else [],
+                
+                # Add justification fields for main.py compatibility  
+                "content_justification": final_feedback.get("harsh_assessment", f"Content analysis: {final_scores['content']}/2.0"),
+                "form_justification": f"Form: {final_scores['form']}/1.0 - {form_feedback}",
+                "grammar_justification": final_feedback.get("harsh_assessment", f"Grammar analysis: {final_scores['grammar']}/2.0"),
+                "vocabulary_justification": final_feedback.get("harsh_assessment", f"Vocabulary analysis: {final_scores['vocabulary']}/2.0"),
+                
                 "feedback": {
                     "grammar": f"Grammar: {final_scores['grammar']}/2.0 - {len(grammar_errors)} errors found",
-                    "vocabulary": f"Vocabulary: {final_scores['vocabulary']}/2.0 - {len(vocabulary_errors)} issues",
+                    "vocabulary": f"Vocabulary: {final_scores['vocabulary']}/2.0 - {len(vocabulary_errors)} issues", 
                     "content": f"Content: {final_scores['content']}/2.0 - {len(content_feedback)} gaps",
                     "form": f"Form: {final_scores['form']}/1.0 - {form_feedback}"
                 }
