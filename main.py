@@ -108,14 +108,28 @@ OFFICIAL PEARSON PTE ACADEMIC ESSAY SCORING GUIDE (Total: 26 points):
    • 1: Response consists of disconnected ideas. There is no hierarchy of ideas or coherence among points. No clear position/opinion can be identified. Words and short statements are linked with very basic linear connective devices(e.g., "and" or "then").
    • 0: There is no recognisable structure.
 
-SCORING INSTRUCTIONS:
-- Use INTELLIGENT FRACTIONAL SCORING (e.g., 4.8, 5.2, 1.7) to precisely reflect performance
-- Minor issues = small deductions (0.1-0.3 from category maximum)
-- Moderate issues = medium deductions (0.5-0.8 from category maximum)  
-- Major issues = large deductions (1.0+ from category maximum)
-- DO NOT deduct whole points for minor mistakes - use GPT intelligence for fair decimal scoring
-- Compare against the key arguments provided to assess content coverage
-- Reference the sample essay for quality benchmarking
+SCORING INSTRUCTIONS - BE EXTREMELY STRICT AND HARSH:
+- Use HARSH FRACTIONAL SCORING (e.g., 2.1, 3.4, 0.8) - PTE Academic is NOTORIOUSLY DIFFICULT
+- EVERY error should cause significant score reduction - PTE is unforgiving
+- Minor issues = medium deductions (0.4-0.8 from category maximum)
+- Moderate issues = large deductions (0.8-1.5 from category maximum)  
+- Major issues = massive deductions (1.5+ from category maximum)
+- BE RUTHLESS: Even small grammar/spelling mistakes should heavily impact scores
+- CONTENT: Missing even ONE key argument should reduce score to 3 or below
+- GRAMMAR: Any grammar error that affects clarity should give maximum 1.5/2
+- SPELLING: Even ONE spelling error should give maximum 1.0/2
+- VOCABULARY: Basic/repetitive vocabulary should score 1.0 or below
+- Compare against the key arguments provided - missing coverage = low content score
+- Reference the sample essay for quality benchmarking - user essay must be SIGNIFICANTLY better than average
+
+HARSH SCORING GUIDELINES - NO MERCY:
+- Essays with ANY spelling errors cannot score above 14/26 total
+- Essays with poor grammar cannot score above 16/26 total  
+- Essays missing key arguments cannot score above 12/26 total
+- Basic vocabulary usage limits score to maximum 15/26 total
+- Poor structure/coherence limits score to maximum 13/26 total
+- MOST STUDENT ESSAYS SHOULD SCORE BETWEEN 8-16/26 (NOT 18-24/26)
+- Only exceptional essays with perfect language and content deserve 20+ scores
 
 CRITICAL ANALYSIS REQUIRED:
 1. CONTENT: Compare user essay against key arguments/points - what's covered vs missing
