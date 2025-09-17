@@ -490,8 +490,9 @@ async def score_summarize_written_text(
         if not user_summary.strip():
             raise HTTPException(status_code=400, detail="User summary cannot be empty")
         
-        # Use global scorer instance
-        hybrid_scorer = get_scorer()
+        # Use enhanced scorer directly
+        from app.services.scoring.hybrid_scorer_enhanced import get_enhanced_scorer
+        hybrid_scorer = get_enhanced_scorer()
         
         print(f"DEBUG: Using scorer type: {type(hybrid_scorer).__name__}")
         print(f"DEBUG: About to call hybrid scorer with: '{user_summary}'")
