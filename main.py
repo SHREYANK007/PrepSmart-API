@@ -256,10 +256,8 @@ def get_scorer():
     global global_scorer
     if global_scorer is None:
         try:
-            from app.services.scoring.hybrid_scorer_enhanced import enhanced_hybrid_scorer
-            global_scorer = enhanced_hybrid_scorer
-            # Trigger full initialization by calling a method that ensures all layers are loaded
-            _ = hasattr(global_scorer, 'comprehensive_score')  # This ensures the class is fully loaded
+            from app.services.scoring.hybrid_scorer_enhanced import get_enhanced_scorer
+            global_scorer = get_enhanced_scorer()
             print("✅ Global enhanced scorer initialized with all layers")
         except ImportError:
             from app.services.scoring.hybrid_scorer import hybrid_scorer
