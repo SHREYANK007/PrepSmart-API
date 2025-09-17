@@ -691,10 +691,21 @@ async def score_write_essay(
                     "spelling_suggestions": ["Check spelling carefully"],
                     "vocabulary_suggestions": [s.get("correction", "") for s in suggestions.get("vocabulary", [])][:5] if suggestions.get("vocabulary") else ["Use academic vocabulary"],
                     
-                    # Overall assessments
+                    # Overall assessments with detailed recommendations
                     "overall_assessment": analysis.get("harsh_assessment", f"Your essay scored {analysis['total_score']}/26."),
                     "strengths": analysis.get("strengths", []),
-                    "priority_improvements": analysis.get("improvements", [])
+                    "priority_improvements": analysis.get("improvements", []),
+                    
+                    # Detailed AI recommendations like SWT
+                    "ai_recommendations": [
+                        f"Content Development: {suggestions.get('content', [{'suggestion': 'Address all aspects of the prompt thoroughly, including counterarguments and challenges'}])[0].get('suggestion', '')}",
+                        f"Grammar Improvement: {suggestions.get('grammar', [{'correction': 'Review subject-verb agreement, article usage, and verb forms'}])[0].get('correction', '')}",
+                        f"Vocabulary Enhancement: {suggestions.get('vocabulary', [{'correction': 'Use more precise academic vocabulary and avoid repetition'}])[0].get('correction', '')}",
+                        f"Coherence & Flow: {suggestions.get('coherence', [{'suggestion': 'Improve transitions between paragraphs and ideas'}])[0].get('suggestion', '')}",
+                        f"Critical Analysis: Consider discussing potential challenges, limitations, and opposing viewpoints to demonstrate deeper understanding",
+                        f"Examples & Evidence: Include specific real-world examples, statistics, or expert opinions to support your arguments",
+                        f"Writing Technique: Vary sentence structures, use complex grammatical forms, and employ sophisticated discourse markers"
+                    ]
                 }
                 analysis = mapped_analysis
             else:
