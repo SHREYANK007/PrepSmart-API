@@ -1079,39 +1079,69 @@ async def summarize_spoken_text(
     Scoring: Content(2) + Grammar(2) + Vocabulary(2) + Form(2) + Spelling(2) = 10 points
     """
     try:
+        # DEBUG: Log incoming request
+        print("="*80)
+        print("🎯 SST SCORING REQUEST RECEIVED")
+        print("="*80)
+        print(f"📝 User Summary: '{audio_transcript}'")
+        print(f"📋 Key Points: '{key_points}'")
+        print(f"📊 Word Count: {len(audio_transcript.split())}")
+        print("-"*80)
+
         from app.services.scoring.hybrid_scorer_4layer import get_4layer_scorer
-        
+
         # Initialize 4-layer scorer
+        print("🤖 Initializing 4-layer hybrid scorer...")
         scorer = get_4layer_scorer()
-        
+
         # Run comprehensive scoring
+        print("⚡ Starting comprehensive scoring analysis...")
         scoring_result = scorer.comprehensive_score(
-            user_summary=audio_transcript, 
+            user_summary=audio_transcript,
             passage="",  # SST doesn't have reference passage
             key_points=key_points
         )
+
+        print("✅ Scoring analysis completed!")
+        print(f"📈 Raw Scoring Result: {scoring_result['success']}")
         
         if not scoring_result['success']:
             raise HTTPException(status_code=500, detail=f"Scoring failed: {scoring_result.get('error', 'Unknown error')}")
         
         # Extract scores
         grammar_score = scoring_result['scores']['grammar']
-        vocabulary_score = scoring_result['scores']['vocabulary'] 
+        vocabulary_score = scoring_result['scores']['vocabulary']
         content_score = scoring_result['scores']['content']
         spelling_score = scoring_result['scores']['spelling']
-        
+
+        print("📋 INDIVIDUAL SCORING BREAKDOWN:")
+        print(f"   🔤 Grammar Score: {grammar_score}/2.0")
+        print(f"   📚 Vocabulary Score: {vocabulary_score}/2.0")
+        print(f"   💡 Content Score: {content_score}/2.0")
+        print(f"   ✏️  Spelling Score: {spelling_score}/2.0")
+
         # Form analysis - SST requires single sentence (2 points if met, 0 if not)
         sentences = audio_transcript.strip().split('.')
         sentence_count = len([s for s in sentences if s.strip()])
         form_score = 2.0 if sentence_count == 1 else 0.0
-        
+
+        print(f"   📝 Form Analysis: {sentence_count} sentence(s) detected")
+        print(f"   📝 Form Score: {form_score}/2.0 {'✅' if form_score == 2.0 else '❌ (Must be single sentence)'}")
+
         # Word count analysis
         words = audio_transcript.strip().split()
         word_count = len(words)
-        
+
+        print(f"   📊 Word Count: {word_count} words")
+
         # Total score calculation
         total_score = grammar_score + vocabulary_score + content_score + form_score + spelling_score
         percentage = int((total_score / 10.0) * 100)
+
+        print("-"*80)
+        print("🏆 FINAL SCORING SUMMARY:")
+        print(f"   📊 Total Score: {total_score}/10.0")
+        print(f"   📈 Percentage: {percentage}%")
         
         # Band calculation (SST uses 10-point scale)
         if percentage >= 85:
@@ -1126,6 +1156,9 @@ async def summarize_spoken_text(
             band = "Below Intermediate"
         else:
             band = "Beginner"
+
+        print(f"   🎯 Performance Band: {band}")
+        print("="*80)
         
         # Create detailed feedback objects
         detailed_feedback = {}
@@ -1213,6 +1246,14 @@ async def summarize_spoken_text(
         else:
             overall_feedback += "Multiple spelling errors need attention. "
         
+        # DEBUG: Log final response
+        print("🚀 SENDING RESPONSE TO FRONTEND:")
+        print(f"   ✅ Success: True")
+        print(f"   📊 Scores: Grammar({grammar_score}) Vocab({vocabulary_score}) Content({content_score}) Form({form_score}) Spelling({spelling_score})")
+        print(f"   📈 Final: {total_score}/10 ({percentage}%) - {band}")
+        print(f"   💬 Overall Feedback: {overall_feedback}")
+        print("="*80)
+
         return SummarizeSpokenTextResponse(
             success=True,
             scores={
